@@ -560,3 +560,20 @@ The structural breakpoints that matter for agents: 1440px (content lock), 1068px
 - Dark-mode counterparts for store and accessories utility cards were not surfaced on the analyzed pages; the system documented is the daytime/light-dominant variant Apple ships by default.
 - Atmospheric photography (environment page mountain vista) is a content asset, not a design token; the documented `{component.environment-quote-card}` describes the structural surface only.
 - The exact backdrop-filter blur radius on `{component.sub-nav-frosted}` and `{component.floating-sticky-bar}` is platform-dependent; production CSS uses `saturate(180%) blur(20px)` as a typical baseline but the value isn't formalized as a token.
+
+## iOS 26 Architecture & Next-Gen Components
+
+### 1. Liquid Spatial Modals & Alerts (`AppleDialogContent`, `appleDialog`)
+- **Container Geometry**: Continuous squircle curvature `rounded-[28px]`, `rounded-[30px]`.
+- **Material**: `backdrop-blur-3xl saturate-[190%] bg-card/90 dark:bg-[#1c1c1e]/90`.
+- **Specular Rim Lighting**: Specular light reflection on top rim with `ring-1 ring-black/5 dark:ring-white/10` and `border border-white/60 dark:border-white/12`.
+- **Action Deck**: Decoupled, tactile **Floating Action Pills (`rounded-full h-11`)** replaces the legacy 1px hairline grid/table-cell split button dividers (`border-t divide-x`).
+  - Primary Action: Action Blue capsule `#0071e3` with radiant drop shadow `shadow-[0_4px_14px_rgba(0,113,227,0.3)]`.
+  - Secondary Action: Frosted pearl capsule `bg-black/[0.05] dark:bg-white/[0.08]` with subtle border.
+  - Destructive Action: Apple Coral `#ff3b30` with `shadow-[0_4px_14px_rgba(255,59,48,0.35)]`.
+
+### 2. Floating Island Dock (`AppleBottomNav`)
+- **Layout Architecture**: Adheres strictly to Apple HIG 3–5 tab threshold (Option A: 4 golden core tabs: Dashboard, Nodes, Shop, Profile). Support features (Knowledge Base, Tickets) are integrated into Profile as standard iOS Inset Group cards.
+- **Island Geometry**: Floating capsule dock detached from viewport margins (`mx-4 mb-3 max-w-[380px] rounded-full`).
+- **Active State Indicator**: Luminous liquid pill badge (`bg-[#0071e3]/10 dark:bg-[#2997ff]/15 text-[#0071e3]`).
+- **Haptics & Micro-Interactions**: Spring physics damping `ios26-press` (`active:scale-[0.93]`).

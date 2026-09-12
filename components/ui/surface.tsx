@@ -262,11 +262,11 @@ function SurfaceDialogContent({
           type="button"
           variant="ghost"
           size="icon-sm"
-          className="absolute top-2 right-2"
+          className="absolute top-3 right-3 rounded-full w-8 h-8 p-0 bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/15 text-muted-foreground hover:text-foreground transition-all active:scale-95 flex items-center justify-center cursor-pointer"
           aria-label={closeButtonLabel}
           onClick={() => void context.close()}
         >
-          <XIcon aria-hidden="true" />
+          <XIcon className="w-4 h-4" aria-hidden="true" />
         </Button>
       )}
     </DialogContent>

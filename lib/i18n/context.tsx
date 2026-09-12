@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import type { Dictionary, Locale } from "./dictionary";
 import zhCNDict from "@/locales/zh-CN/dictionary.json";
 
@@ -13,6 +14,8 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | null>(null);
 
+const SUPPORTED_LOCALES: Locale[] = ["zh-CN", "en-US", "ja-JP", "ko-KR"];
+
 export function I18nProvider({
   children,
   initialLocale,
@@ -24,17 +27,65 @@ export function I18nProvider({
 }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
   const [dictionary, setDictionary] = useState<Dictionary>(initialDictionary || (zhCNDict as Dictionary));
+  const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    setLocaleState(initialLocale);
+    if (initialDictionary) {
+      setDictionary(initialDictionary);
+    }
+    document.cookie = `NEXT_LOCALE=${initialLocale};path=/;max-age=31536000;SameSite=Lax`;
+  }, [initialLocale, initialDictionary]);
 
   const setLocale = (newLocale: Locale) => {
     if (newLocale === locale) return;
     setLocaleState(newLocale);
     document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
     
-    // Dynamic import to update client dictionary
-    if (newLocale === "zh-CN") {
-      import("@/locales/zh-CN/dictionary.json").then((m) => setDictionary(m.default as Dictionary));
-    } else {
-      import("@/locales/en-US/dictionary.json").then((m) => setDictionary(m.default as Dictionary));
+    // Dynamic import to update client dictionary immediately
+    switch (newLocale) {
+      case "zh-CN":
+        import("@/locales/zh-CN/dictionary.json").then((m) => setDictionary(m.default as Dictionary));
+        break;
+      case "en-US":
+        import("@/locales/en-US/dictionary.json").then((m) => setDictionary(m.default as Dictionary));
+        break;
+      case "ja-JP":
+        import("@/locales/ja-JP/dictionary.json").then((m) => setDictionary(m.default as Dictionary));
+        break;
+      case "ko-KR":
+        import("@/locales/ko-KR/dictionary.json").then((m) => setDictionary(m.default as Dictionary));
+        break;
+    }
+
+    // Update browser URL to reflect the new locale
+    const currentPath =
+      pathname ||
+      (typeof window !== "undefined" ? window.location.pathname : "");
+
+    if (currentPath) {
+      const segments = currentPath.split("/").filter(Boolean);
+      let targetPath = `/${newLocale}`;
+
+      if (
+        segments.length > 0 &&
+        SUPPORTED_LOCALES.includes(segments[0] as Locale)
+      ) {
+        segments[0] = newLocale;
+        targetPath = "/" + segments.join("/");
+      } else if (segments.length > 0) {
+        targetPath = `/${newLocale}/${segments.join("/")}`;
+      } else {
+        targetPath = `/${newLocale}/dashboard`;
+      }
+
+      const search =
+        typeof window !== "undefined" ? window.location.search : "";
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      const targetUrl = `${targetPath}${search}${hash}`;
+
+      router.replace(targetUrl);
     }
   };
 

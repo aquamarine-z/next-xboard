@@ -84,16 +84,18 @@ export interface XboardNotice {
 
 export interface XboardConfig {
   app_name: string;
+  title?: string;
   app_description?: string;
+  logo?: string;
   tos_url?: string;
-  is_email_verify: number;
-  is_invite_force: number;
-  email_whitelist_suffix: number;
-  is_recaptcha: number;
+  is_email_verify?: number;
+  is_invite_force?: number;
+  email_whitelist_suffix?: number;
+  is_recaptcha?: number;
   recaptcha_site_key?: string;
-  app_url: string;
-  currency: string;
-  currency_symbol: string;
+  app_url?: string;
+  currency?: string;
+  currency_symbol?: string;
 }
 
 export interface XboardKnowledge {

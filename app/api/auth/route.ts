@@ -31,7 +31,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
 
-    const token = result.data.auth_data || result.data.token || "";
+    const token =
+      typeof result.data === "string"
+        ? result.data
+        : (result.data as any)?.auth_data || (result.data as any)?.token || "";
     if (token) {
       await setSessionToken(token);
     }

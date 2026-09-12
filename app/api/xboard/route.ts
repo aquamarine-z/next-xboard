@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { xboardFetch } from "@/server/xboard-client";
-import { getSessionToken } from "@/server/session";
+import { xboardFetch, getXboardSiteMeta } from "@/server/xboard-client";
+import { getSessionToken, clearSessionToken } from "@/server/session";
 import { getDefaultKnowledgeArticles } from "@/lib/default-knowledge";
 import type {
   XboardUser,
@@ -48,10 +48,24 @@ export async function GET(request: Request) {
 
   // If user is not logged in, fetch guest public config and plans directly from real Xboard backend
   if (!token) {
-    const [configRes, planRes] = await Promise.all([
+    const [configRes, planRes, siteMeta] = await Promise.all([
       xboardFetch<XboardConfig>("/api/v1/guest/comm/config", { requiresAuth: false }),
       xboardFetch<XboardPlan[]>("/api/v1/guest/plan/fetch", { requiresAuth: false }),
+      getXboardSiteMeta(),
     ]);
+
+    const rawConfig = (configRes.data || {}) as XboardConfig;
+    const mergedConfig: XboardConfig = {
+      ...rawConfig,
+      app_name: siteMeta.title || rawConfig.app_name || "Aqua VPS (试运营中)",
+      title: siteMeta.title || rawConfig.app_name || "Aqua VPS (试运营中)",
+      app_description: siteMeta.description || rawConfig.app_description || "Aqua的VPS云",
+      logo: siteMeta.logo || rawConfig.logo || "",
+    };
+
+    const guestPlans = Array.isArray(planRes.data)
+      ? planRes.data.filter((p: any) => p && p.show !== 0 && p.show !== "0" && p.show !== false)
+      : [];
 
     return NextResponse.json({
       authenticated: false,
@@ -60,14 +74,17 @@ export async function GET(request: Request) {
       servers: [],
       notices: [],
       tickets: [],
-      config: configRes.data,
-      plans: planRes.data || [],
+      config: mergedConfig,
+      plans: guestPlans,
     });
   }
 
   // User is authenticated, call real Xboard API endpoints with Bearer token
   if (type === "user") {
     const userRes = await xboardFetch<XboardUser>("/api/v1/user/info");
+    if (!userRes.data || userRes.status === 401 || userRes.status === 403) {
+      await clearSessionToken();
+    }
     return NextResponse.json(userRes.data || { error: userRes.error }, { status: userRes.status });
   }
 
@@ -87,15 +104,54 @@ export async function GET(request: Request) {
   }
 
   // Aggregated all real data
-  const [user, subscribe, servers, noticeRes, planRes, configRes, ticketRes] = await Promise.all([
+  const [user, subscribe, servers, noticeRes, planRes, configRes, ticketRes, siteMeta] = await Promise.all([
     xboardFetch<XboardUser>("/api/v1/user/info"),
     xboardFetch<XboardSubscribe>("/api/v1/user/getSubscribe"),
     xboardFetch<XboardServer[]>("/api/v1/user/server/fetch"),
     xboardFetch<XboardNotice[]>("/api/v1/user/notice/fetch"),
-    xboardFetch<XboardPlan[]>("/api/v1/guest/plan/fetch", { requiresAuth: false }),
+    xboardFetch<XboardPlan[]>("/api/v1/user/plan/fetch"),
     xboardFetch<XboardConfig>("/api/v1/guest/comm/config", { requiresAuth: false }),
     xboardFetch<XboardTicket[]>("/api/v1/user/ticket/fetch"),
+    getXboardSiteMeta(),
   ]);
+
+  const rawConfig = (configRes.data || {}) as XboardConfig;
+  const mergedConfig: XboardConfig = {
+    ...rawConfig,
+    app_name: siteMeta.title || rawConfig.app_name || "Aqua VPS (试运营中)",
+    title: siteMeta.title || rawConfig.app_name || "Aqua VPS (试运营中)",
+    app_description: siteMeta.description || rawConfig.app_description || "Aqua的VPS云",
+    logo: siteMeta.logo || rawConfig.logo || "",
+  };
+
+  let allPlans = (Array.isArray(planRes.data) && planRes.data.length > 0)
+    ? planRes.data
+    : [];
+
+  if (allPlans.length === 0) {
+    const guestPlans = await xboardFetch<XboardPlan[]>("/api/v1/guest/plan/fetch", { requiresAuth: false });
+    if (Array.isArray(guestPlans.data) && guestPlans.data.length > 0) {
+      allPlans = guestPlans.data;
+    }
+  }
+
+  // Only include plans explicitly marked for sale (show !== 0)
+  const salePlans = allPlans.filter((p: any) => p && p.show !== 0 && p.show !== "0" && p.show !== false);
+
+  // If session is expired or invalid on the backend, clear session token and return unauthenticated response
+  if (!user.data) {
+    await clearSessionToken();
+    return NextResponse.json({
+      authenticated: false,
+      user: null,
+      subscribe: null,
+      servers: [],
+      notices: [],
+      plans: salePlans,
+      tickets: [],
+      config: mergedConfig,
+    });
+  }
 
   return NextResponse.json({
     authenticated: true,
@@ -103,9 +159,9 @@ export async function GET(request: Request) {
     subscribe: subscribe.data,
     servers: servers.data || [],
     notices: noticeRes.data || [],
-    plans: planRes.data || [],
+    plans: salePlans,
     tickets: ticketRes.data || [],
-    config: configRes.data,
+    config: mergedConfig,
   });
 }
 
@@ -163,10 +219,12 @@ export async function POST(request: Request) {
     }
 
     if (action === "change_password") {
+      const currentPassword = body.current_password || body.old_password || "";
       const res = await xboardFetch("/api/v1/user/changePassword", {
         method: "POST",
         body: JSON.stringify({
-          current_password: body.current_password,
+          old_password: currentPassword,
+          current_password: currentPassword,
           new_password: body.new_password,
         }),
       });

@@ -1,14 +1,15 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useTranslation } from "@/lib/i18n/context";
 import { useUserStore } from "@/lib/store/userStore";
 import { formatDate } from "@/lib/format";
-import { Plus, MessageSquare, Clock } from "lucide-react";
+import { Plus, MessageSquare, Clock, ChevronLeft } from "lucide-react";
 import { openCreateTicketDialog } from "@/components/dialogs";
 
 export default function TicketsPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { tickets, fetchDashboardData } = useUserStore();
 
   React.useEffect(() => {
@@ -20,7 +21,18 @@ export default function TicketsPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+      {/* Back to Settings Link */}
+      <div>
+        <Link
+          href={`/${locale}/profile`}
+          className="inline-flex items-center gap-1 text-xs font-medium text-[#0066cc] dark:text-[#2997ff] hover:underline select-none group"
+        >
+          <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+          <span>{t("common.nav.profile")}</span>
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div className="space-y-1">
@@ -35,7 +47,7 @@ export default function TicketsPage() {
         <button
           type="button"
           onClick={handleCreateTicket}
-          className="apple-pill-btn bg-[#0066cc] hover:bg-[#0071e3] text-white flex items-center gap-2 shadow-sm font-medium self-start sm:self-auto cursor-pointer"
+          className="apple-pill-btn bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center gap-2 shadow-xs shadow-[#0066cc]/25 font-medium self-start sm:self-auto cursor-pointer ios-touch-feedback active:scale-95 transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>{t("tickets.create_ticket")}</span>

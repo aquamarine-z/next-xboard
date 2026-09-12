@@ -3,8 +3,9 @@ import type { NextRequest } from "next/server";
 import { match } from "@formatjs/intl-localematcher";
 import Negotiator from "negotiator";
 
-const locales = ["zh-CN", "en-US"];
+const locales = ["zh-CN", "en-US", "ja-JP", "ko-KR"];
 const defaultLocale = "zh-CN";
+const TOKEN_COOKIE_NAME = "xboard_auth_token";
 
 function getLocale(request: NextRequest): string {
   // 1. Check Cookie first
@@ -38,19 +39,46 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  const token = request.cookies.get(TOKEN_COOKIE_NAME)?.value;
+
   // Check if pathname already has a supported locale
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
 
-  if (pathnameHasLocale) {
-    return NextResponse.next();
+  // If path does not have locale (e.g. "/" or "/dashboard")
+  if (!pathnameHasLocale) {
+    const locale = getLocale(request);
+    const targetSubPath =
+      pathname === "/"
+        ? (token ? "dashboard" : "login")
+        : pathname.replace(/^\//, "");
+    request.nextUrl.pathname = `/${locale}/${targetSubPath}`;
+    return NextResponse.redirect(request.nextUrl);
   }
 
-  // Redirect to localized path
-  const locale = getLocale(request);
-  request.nextUrl.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
-  return NextResponse.redirect(request.nextUrl);
+  // Extract locale and sub-path from localized URL e.g. /zh-CN/dashboard -> ["zh-CN", "dashboard"]
+  const segments = pathname.split("/").filter(Boolean);
+  const currentLocale = segments[0] || defaultLocale;
+  const subPath = segments[1] || "";
+
+  const isAuthPage = subPath === "login";
+
+  // Unauthenticated user attempting to access protected pages -> redirect to login
+  if (!token && !isAuthPage) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = `/${currentLocale}/login`;
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Authenticated user attempting to access login page -> redirect to dashboard
+  if (token && isAuthPage) {
+    const dashboardUrl = request.nextUrl.clone();
+    dashboardUrl.pathname = `/${currentLocale}/dashboard`;
+    return NextResponse.redirect(dashboardUrl);
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {

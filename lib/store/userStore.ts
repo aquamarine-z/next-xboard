@@ -43,8 +43,10 @@ export const useUserStore = create<UserState>((set) => ({
       const res = await fetch("/api/xboard");
       if (!res.ok) throw new Error("Failed to fetch dashboard data");
       const data = await res.json();
+      const isAuthenticated = Boolean(data.authenticated && data.user);
+
       set({
-        authenticated: Boolean(data.authenticated),
+        authenticated: isAuthenticated,
         user: data.user,
         subscribe: data.subscribe,
         servers: data.servers || [],
@@ -54,6 +56,16 @@ export const useUserStore = create<UserState>((set) => ({
         config: data.config || null,
         isLoading: false,
       });
+
+      // If user is not authenticated and is on a dashboard route, redirect to login
+      if (!isAuthenticated && typeof window !== "undefined") {
+        const pathname = window.location.pathname;
+        if (!pathname.includes("/login")) {
+          const match = pathname.match(/^\/(zh-CN|en-US|ja-JP|ko-KR)/);
+          const currentLocale = match ? match[1] : "zh-CN";
+          window.location.href = `/${currentLocale}/login`;
+        }
+      }
     } catch (err: any) {
       set({ error: err.message, isLoading: false });
     }
@@ -79,5 +91,14 @@ export const useUserStore = create<UserState>((set) => ({
       isLoading: false,
       error: null,
     });
+
+    if (typeof window !== "undefined") {
+      const pathname = window.location.pathname;
+      if (!pathname.includes("/login")) {
+        const match = pathname.match(/^\/(zh-CN|en-US|ja-JP|ko-KR)/);
+        const currentLocale = match ? match[1] : "zh-CN";
+        window.location.href = `/${currentLocale}/login`;
+      }
+    }
   },
 }));

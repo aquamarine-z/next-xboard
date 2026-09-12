@@ -49,18 +49,18 @@ export function NodeConnectModal({
   return (
     <SurfaceDialogContent
       showCloseButton={false}
-      className="p-0 gap-0 overflow-hidden sm:max-w-[320px] rounded-[22px] border border-black/10 dark:border-white/12 shadow-2xl bg-card/95 backdrop-blur-2xl outline-none"
+      className="p-0 gap-0 overflow-hidden sm:max-w-[360px] rounded-[28px] border border-white/60 dark:border-white/12 ring-1 ring-black/5 dark:ring-white/10 shadow-2xl bg-card/90 dark:bg-[#1c1c1e]/90 backdrop-blur-3xl ios26-glass-modal outline-none"
     >
       {/* Apple Centered Header */}
-      <div className="pt-6 px-6 pb-2 flex flex-col items-center text-center">
-        <div className="w-11 h-11 rounded-[14px] bg-gradient-to-b from-[#0071e3]/15 to-[#0071e3]/5 dark:from-[#2997ff]/20 dark:to-[#2997ff]/10 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/15 flex items-center justify-center mb-2 shadow-2xs select-none">
-          <Server className="w-5 h-5 stroke-[1.75]" />
+      <div className="pt-7 px-6 pb-2 flex flex-col items-center text-center">
+        <div className="w-12 h-12 rounded-[18px] bg-gradient-to-b from-[#0071e3]/15 to-[#0071e3]/5 dark:from-[#2997ff]/20 dark:to-[#2997ff]/10 text-[#0071e3] dark:text-[#2997ff] border border-[#0071e3]/20 flex items-center justify-center mb-3 shadow-xs select-none">
+          <Server className="w-6 h-6 stroke-[1.8]" />
         </div>
-        <h3 className="text-[17px] font-bold text-foreground tracking-tight leading-snug truncate max-w-[260px]">
+        <h3 className="text-[18px] font-semibold text-foreground tracking-[-0.015em] leading-snug truncate max-w-[280px]">
           {server.name}
         </h3>
-        <div className="inline-flex items-center gap-2 mt-1.5 px-2.5 py-0.5 rounded-full bg-secondary/60 border border-black/6 dark:border-white/10 text-xs text-muted-foreground select-none">
-          <span className="font-mono font-semibold uppercase text-foreground/90">
+        <div className="inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full bg-secondary/70 border border-black/5 dark:border-white/8 text-xs text-muted-foreground select-none">
+          <span className="font-mono font-semibold uppercase text-foreground">
             {server.type}
           </span>
           <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
@@ -69,43 +69,41 @@ export function NodeConnectModal({
       </div>
 
       {/* QR Code Presentation */}
-      <div className="flex justify-center px-6 py-3">
-        <div className="p-2.5 bg-white rounded-[18px] shadow-sm border border-black/8 flex items-center justify-center w-[170px] h-[170px] select-none">
+      <div className="flex justify-center px-6 py-4">
+        <div className="p-3 bg-white rounded-[22px] shadow-sm border border-black/8 flex items-center justify-center w-[184px] h-[184px] select-none">
           {qrUrl ? (
             <img
               src={qrUrl}
               alt={server.name}
-              width={154}
-              height={154}
-              className="w-[154px] h-[154px] block rounded-lg select-none"
+              width={160}
+              height={160}
+              className="w-[160px] h-[160px] block rounded-xl select-none"
               draggable={false}
             />
           ) : (
-            <div className="w-6 h-6 border-2 border-[#0071e3]/30 border-t-[#0071e3] rounded-full animate-spin" />
+            <div className="w-7 h-7 border-2 border-[#0071e3]/30 border-t-[#0071e3] rounded-full animate-spin" />
           )}
         </div>
       </div>
 
-      {/* Docked Hairline Button Bar */}
-      <div className="border-t border-black/10 dark:border-white/10 grid grid-cols-2 divide-x divide-black/10 dark:divide-white/10 h-11 text-[16px]">
+      {/* Floating Action Pill Bar */}
+      <div className="p-4 pt-1 flex items-center gap-2.5">
         <button
           type="button"
           onClick={() => void close()}
-          className="w-full h-full flex items-center justify-center text-[16px] font-normal text-[#0071e3] dark:text-[#2997ff] bg-transparent hover:bg-black/[0.04] dark:hover:bg-white/[0.06] active:bg-black/[0.08] dark:active:bg-white/[0.1] transition-colors select-none cursor-pointer outline-none"
+          className="flex-1 h-11 flex items-center justify-center text-[15px] font-medium text-foreground/90 bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.08] dark:hover:bg-white/[0.12] active:bg-black/[0.1] dark:active:bg-white/[0.15] border border-black/5 dark:border-white/10 rounded-full transition-all ios26-press select-none cursor-pointer outline-none"
         >
           {t("common.cancel")}
         </button>
         <button
           type="button"
           onClick={handleCopy}
-          className="w-full h-full flex items-center justify-center text-[16px] font-semibold text-[#0071e3] dark:text-[#2997ff] bg-transparent hover:bg-black/[0.04] dark:hover:bg-white/[0.06] active:bg-black/[0.08] dark:active:bg-white/[0.1] transition-colors select-none cursor-pointer outline-none gap-1.5"
+          className="flex-1 h-11 flex items-center justify-center text-[15px] font-semibold text-white bg-[#0071e3] hover:bg-[#0077ed] active:bg-[#0062c4] shadow-[0_4px_14px_rgba(0,113,227,0.3)] dark:shadow-[0_4px_18px_rgba(41,151,255,0.25)] rounded-full transition-all ios26-press select-none cursor-pointer outline-none gap-1.5"
         >
           {copied ? (
             <>
-              <Check className="w-4 h-4 stroke-[2.5] text-emerald-600 dark:text-emerald-400" />
-              <span className="text-emerald-600 dark:text-emerald-400">
-                {t("common.copied")}
-              </span>
+              <Check className="w-4 h-4 stroke-[2.5] text-white" />
+              <span>{t("common.copied")}</span>
             </>
           ) : (
             <>

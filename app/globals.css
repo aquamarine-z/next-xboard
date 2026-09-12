@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-sf-pro-display), var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -113,23 +113,24 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
     font-size: 17px;
     line-height: 1.47;
     letter-spacing: -0.022em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* SF Pro Display Headlines */
   h1, .apple-hero {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    font-family: var(--font-sf-pro-display), var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
     letter-spacing: -0.028em;
     font-weight: 600;
   }
 
   h2, h3, .apple-headline {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    font-family: var(--font-sf-pro-display), var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
     letter-spacing: -0.022em;
     font-weight: 600;
   }
@@ -191,3 +192,176 @@
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
 }
+
+/* iOS 26 Liquid Spatial Glass & Tactile Micro-interactions */
+.ios26-glass-modal {
+  backdrop-filter: blur(40px) saturate(190%);
+  -webkit-backdrop-filter: blur(40px) saturate(190%);
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.25),
+              0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+}
+
+.dark .ios26-glass-modal {
+  box-shadow: 0 35px 80px -20px rgba(0, 0, 0, 0.75),
+              0 1px 0 0 rgba(255, 255, 255, 0.18) inset,
+              0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+.ios26-dock-island {
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.12),
+              0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+.dark .ios26-dock-island {
+  box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.65),
+              0 1px 0 0 rgba(255, 255, 255, 0.16) inset,
+              0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+}
+
+/* ==========================================================================
+   Apple iOS 26 Liquid Glass Engine (液态玻璃引擎)
+   Based on open-source Liquid Glass / Glassmorphism best practices
+   ========================================================================== */
+
+.liquid-glass-island {
+  position: relative;
+  background: rgba(255, 255, 255, 0.56);
+  backdrop-filter: blur(36px) saturate(220%) brightness(105%) contrast(104%);
+  -webkit-backdrop-filter: blur(36px) saturate(220%) brightness(105%) contrast(104%);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  box-shadow: 
+    0 20px 48px -10px rgba(0, 0, 0, 0.14),
+    0 8px 20px -4px rgba(0, 0, 0, 0.06),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.05),
+    inset 0 0 20px 0 rgba(255, 255, 255, 0.32);
+  overflow: hidden;
+}
+
+.dark .liquid-glass-island {
+  background: rgba(18, 18, 22, 0.65);
+  backdrop-filter: blur(36px) saturate(200%) brightness(95%) contrast(110%);
+  -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(95%) contrast(110%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 24px 60px -10px rgba(0, 0, 0, 0.85),
+    0 8px 24px -4px rgba(0, 0, 0, 0.5),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35),
+    inset 0 0 25px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Prismatic top rim refraction line (液态高光切面) */
+.liquid-glass-island::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 15;
+}
+
+.dark .liquid-glass-island::before {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+/* Sliding liquid indicator pill (物理滑动液态水滴胶囊) */
+.liquid-glass-active-pill {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 245, 247, 0.88) 100%);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  box-shadow: 
+    0 3px 12px 0 rgba(0, 0, 0, 0.08),
+    0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .liquid-glass-active-pill {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.20) 0%, rgba(255, 255, 255, 0.10) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.65);
+}
+
+.ios26-spring {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios26-press {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease, filter 0.18s ease;
+}
+
+.ios26-press:active {
+  transform: scale(0.93);
+  opacity: 0.88;
+}
+
+/* Cross-browser scrollbar hiding for horizontal tabs */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ==========================================================================
+   Apple iOS 26 Notification Banner System
+   ========================================================================== */
+
+[data-sonner-toaster] {
+  pointer-events: none !important;
+  font-family: var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "PingFang SC", "Segoe UI", Roboto, sans-serif !important;
+}
+
+/* Mobile: Top-Center 100% horizontal centering */
+[data-sonner-toaster][data-x-position='center'] {
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+  transform: none !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+[data-sonner-toaster][data-x-position='center'] [data-sonner-toast] {
+  left: 0 !important;
+  right: 0 !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: max-content !important;
+  max-width: calc(100vw - 32px) !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+  pointer-events: auto !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: auto !important;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
+}

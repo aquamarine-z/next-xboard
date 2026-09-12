@@ -1,14 +1,16 @@
 import type zhCNDict from "@/locales/zh-CN/dictionary.json";
 
 export type Dictionary = typeof zhCNDict;
-export type Locale = "zh-CN" | "en-US";
+export type Locale = "zh-CN" | "en-US" | "ja-JP" | "ko-KR";
 
 export const defaultLocale: Locale = "zh-CN";
-export const locales: Locale[] = ["zh-CN", "en-US"];
+export const locales: Locale[] = ["zh-CN", "en-US", "ja-JP", "ko-KR"];
 
 const dictionaries = {
   "zh-CN": () => import("@/locales/zh-CN/dictionary.json").then((module) => module.default),
   "en-US": () => import("@/locales/en-US/dictionary.json").then((module) => module.default),
+  "ja-JP": () => import("@/locales/ja-JP/dictionary.json").then((module) => module.default),
+  "ko-KR": () => import("@/locales/ko-KR/dictionary.json").then((module) => module.default),
 };
 
 export const hasLocale = (locale: string): locale is Locale => {

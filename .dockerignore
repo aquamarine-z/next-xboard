@@ -1,0 +1,41 @@
+# Version control and editor files
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# Build outputs and cache
+.next
+out
+build
+dist
+
+# Dependencies
+node_modules
+.pnpm-store
+
+# Environment files with local secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Windows-specific pnpm config (must not override Linux target in Docker)
+.npmrc
+
+# Docker configuration files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation and logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+DESIGN.md
+AGENTS.md
+README.md

@@ -1,0 +1,12 @@
+services:
+  next-xboard:
+    image: ghcr.io/aquamarine-z/next-xboard:latest
+    container_name: next-xboard
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # 可随时替换为您自己的 Xboard 后端 API 地址
+      - XBOARD_API_URL=https://cloud.aquamarinez.com
+      - PORT=3000
+      - NODE_ENV=production

@@ -44,7 +44,9 @@
     "language": {
       "toggle": "切换语言",
       "zh_CN": "简体中文",
-      "en_US": "English"
+      "en_US": "English",
+      "ja_JP": "日本語",
+      "ko_KR": "한국어"
     }
   },
   "auth": {
@@ -160,6 +162,7 @@
   "tickets": {
     "title": "工单支持",
     "subtitle": "提交并查看您的工单支持记录",
+    "desc": "提交工单与获取专属技术支持反馈",
     "create_ticket": "新建工单",
     "ticket_subject": "工单主题",
     "ticket_level": "优先级",
@@ -204,7 +207,7 @@
     "third_party_integration": "第三方联动与通知",
     "reset_success": "订阅安全密钥已成功重置，旧配置已全部失效。",
     "password_prompt_title": "设置新密码",
-    "password_prompt_message": "请输入您想设置的新密码：",
+    "password_prompt_message": "请输入当前密码与您想设置的新密码：",
     "password_prompt_placeholder": "至少 8 位包含字母与数字",
     "new_password": "新密码",
     "confirm_new_password": "确认新密码",
@@ -229,6 +232,7 @@
   "knowledge": {
     "title": "文档教程",
     "subtitle": "官方精选客户端配置教程与常见使用指南",
+    "desc": "客户端配置教程与常见使用指南",
     "search_placeholder": "搜索教程或关键词...",
     "all_categories": "全部分类",
     "empty": "暂无相关文档教程",
@@ -238,6 +242,9 @@
     "reading_time": "约 {minutes} 分钟",
     "updated_at": "更新于 {date}",
     "loading": "正在加载知识库文档...",
-    "category": "分类"
+    "category": "分类",
+    "view_category": "查看本类",
+    "clear_search": "清除搜索",
+    "other_category": "其它教程"
   }
 }

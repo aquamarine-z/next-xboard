@@ -5,6 +5,7 @@ import { useTranslation } from "@/lib/i18n/context";
 import { useUserStore } from "@/lib/store/userStore";
 import { Check, ShoppingBag, ArrowRight } from "lucide-react";
 import { appleDialog } from "@/components/dialogs";
+import { toast } from "@/components/ui/sonner";
 
 export default function ShopPage() {
   const { t } = useTranslation();
@@ -23,12 +24,33 @@ export default function ShopPage() {
       cancelButtonContent: t("common.cancel"),
     }).then((confirmed) => {
       if (confirmed) {
-        void appleDialog.alert({
-          title: t("common.success"),
-          message: `${planName} - ${t("common.success")}`,
-        });
+        toast.success(`${planName} - ${t("common.success")}`);
       }
     });
+  };
+
+  const availablePlans = React.useMemo(() => {
+    if (!plans || !Array.isArray(plans)) return [];
+    return plans.filter((plan) => {
+      if (plan.show === 0 || (plan as any).show === "0" || (plan as any).show === false) return false;
+      const hasPrice = [
+        plan.month_price,
+        plan.quarter_price,
+        plan.half_year_price,
+        plan.year_price,
+        plan.two_year_price,
+        plan.three_year_price,
+        plan.onetime_price,
+      ].some((price) => typeof price === "number" && price > 0);
+      return hasPrice;
+    });
+  }, [plans]);
+
+  const parsePlanContent = (content: string, plan: any) => {
+    if (!content) return "";
+    return content
+      .replace(/\{\{\s*transfer\s*\}\}/g, String(plan.transfer_enable ?? 0))
+      .replace(/\{\{\s*speed_limit\s*\}\}/g, plan.speed_limit ? String(plan.speed_limit) : "∞");
   };
 
   return (
@@ -44,7 +66,7 @@ export default function ShopPage() {
       </div>
 
       {/* Real Plans from Backend */}
-      {plans && plans.length > 0 ? (
+      {availablePlans && availablePlans.length > 0 ? (
         <>
           {/* Cycle Switcher */}
           <div className="inline-flex p-1 rounded-full bg-secondary/80 border border-border select-none">
@@ -66,7 +88,7 @@ export default function ShopPage() {
 
           {/* Real Plan Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-            {plans.map((plan) => {
+            {availablePlans.map((plan) => {
               const priceMap: Record<string, number | undefined> = {
                 month: plan.month_price,
                 quarter: plan.quarter_price,
@@ -108,7 +130,7 @@ export default function ShopPage() {
                     {plan.content && (
                       <div
                         className="text-xs text-muted-foreground space-y-1.5 pt-3 border-t border-border/60 prose prose-sm dark:prose-invert max-w-none"
-                        dangerouslySetInnerHTML={{ __html: plan.content }}
+                        dangerouslySetInnerHTML={{ __html: parsePlanContent(plan.content, plan) }}
                       />
                     )}
                   </div>
@@ -117,7 +139,7 @@ export default function ShopPage() {
                     <button
                       type="button"
                       onClick={() => handleCheckout(plan.name, rawPrice)}
-                      className="w-full apple-pill-btn bg-[#0066cc] hover:bg-[#0071e3] text-white flex items-center justify-center gap-2 text-xs font-medium shadow-sm"
+                      className="w-full apple-pill-btn bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center justify-center gap-2 text-xs font-medium shadow-xs shadow-[#0066cc]/25 transition-all ios-touch-feedback active:scale-[0.98] cursor-pointer"
                     >
                       <span>{t("shop.buy_now")}</span>
                       <ArrowRight className="w-3.5 h-3.5" />

@@ -5,6 +5,8 @@ import { ThemeProvider as NextThemesProvider } from "next-themes";
 import NiceModal from "@ebay/nice-modal-react";
 import { I18nProvider } from "@/lib/i18n/context";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionary";
+import { DocumentTitle } from "./document-title";
+import { Toaster } from "@/components/ui/sonner";
 
 export function AppProviders({
   children,
@@ -23,7 +25,11 @@ export function AppProviders({
       disableTransitionOnChange
     >
       <I18nProvider initialLocale={locale} initialDictionary={dictionary}>
-        <NiceModal.Provider>{children}</NiceModal.Provider>
+        <DocumentTitle />
+        <NiceModal.Provider>
+          {children}
+          <Toaster />
+        </NiceModal.Provider>
       </I18nProvider>
     </NextThemesProvider>
   );

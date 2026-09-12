@@ -67,35 +67,75 @@ export function ThemeLanguageToggle() {
       : "Follow System (Click for Light)";
   };
 
+  const getLocaleLabel = (loc: string) => {
+    switch (loc) {
+      case "zh-CN":
+        return "中文";
+      case "en-US":
+        return "EN";
+      case "ja-JP":
+        return "日本語";
+      case "ko-KR":
+        return "한국어";
+      default:
+        return "中文";
+    }
+  };
+
   return (
     <div className="flex items-center gap-1.5">
-      {/* Language Switcher */}
+      {/* Language Switcher with iOS 26 Spatial Liquid Popover */}
       <DropdownMenu>
-        <DropdownMenuTrigger className="inline-flex items-center justify-center h-8 px-2.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-black/[0.05] dark:hover:bg-white/[0.08] active:scale-95 transition-all cursor-pointer outline-none select-none">
-          <Globe className="h-3.5 w-3.5 mr-1.5 opacity-80" />
-          <span>{locale === "zh-CN" ? "中文" : "EN"}</span>
+        <DropdownMenuTrigger className="inline-flex items-center justify-center h-[37px] w-[84px] sm:w-[88px] rounded-full text-xs font-medium text-muted-foreground hover:text-foreground bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.09] border border-black/[0.06] dark:border-white/[0.08] active:scale-95 transition-all duration-200 cursor-pointer outline-none select-none shadow-2xs gap-1.5 shrink-0">
+          <Globe className="h-4 w-4 opacity-80 shrink-0" />
+          <span className="font-medium text-center">{getLocaleLabel(locale)}</span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-[136px] p-1.5">
+        <DropdownMenuContent align="end" sideOffset={6} className="min-w-[136px] p-1 rounded-[16px]">
           <DropdownMenuItem
             onClick={() => setLocale("zh-CN")}
-            className="flex items-center justify-between gap-3 text-[13px] py-2 px-2.5 rounded-[8px] cursor-pointer select-none"
+            className="flex items-center justify-between py-2 px-3 rounded-[11px] text-[13px] font-medium text-foreground cursor-pointer transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06] select-none"
           >
-            <span className={locale === "zh-CN" ? "font-semibold text-foreground" : "font-normal text-muted-foreground"}>
+            <span className={locale === "zh-CN" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}>
               {t("common.language.zh_CN")}
             </span>
             {locale === "zh-CN" && (
-              <Check className="h-3.5 w-3.5 text-[#0071e3] dark:text-[#2997ff] stroke-[2.5]" />
+              <Check className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff] stroke-[2.5]" />
             )}
           </DropdownMenuItem>
+
           <DropdownMenuItem
             onClick={() => setLocale("en-US")}
-            className="flex items-center justify-between gap-3 text-[13px] py-2 px-2.5 rounded-[8px] cursor-pointer select-none"
+            className="flex items-center justify-between py-2 px-3 rounded-[11px] text-[13px] font-medium text-foreground cursor-pointer transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06] select-none"
           >
-            <span className={locale === "en-US" ? "font-semibold text-foreground" : "font-normal text-muted-foreground"}>
+            <span className={locale === "en-US" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}>
               {t("common.language.en_US")}
             </span>
             {locale === "en-US" && (
-              <Check className="h-3.5 w-3.5 text-[#0071e3] dark:text-[#2997ff] stroke-[2.5]" />
+              <Check className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff] stroke-[2.5]" />
+            )}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => setLocale("ja-JP")}
+            className="flex items-center justify-between py-2 px-3 rounded-[11px] text-[13px] font-medium text-foreground cursor-pointer transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06] select-none"
+          >
+            <span className={locale === "ja-JP" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}>
+              {t("common.language.ja_JP")}
+            </span>
+            {locale === "ja-JP" && (
+              <Check className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff] stroke-[2.5]" />
+            )}
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={() => setLocale("ko-KR")}
+            className="flex items-center justify-between py-2 px-3 rounded-[11px] text-[13px] font-medium text-foreground cursor-pointer transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06] select-none"
+          >
+            <span className={locale === "ko-KR" ? "text-foreground font-medium" : "text-muted-foreground font-normal"}>
+              {t("common.language.ko_KR")}
+            </span>
+            {locale === "ko-KR" && (
+              <Check className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff] stroke-[2.5]" />
             )}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -105,7 +145,7 @@ export function ThemeLanguageToggle() {
       <button
         type="button"
         onClick={cycleTheme}
-        className="relative inline-flex items-center justify-center h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-black/[0.05] dark:hover:bg-white/[0.08] active:scale-90 cursor-pointer transition-all outline-none"
+        className="relative inline-flex items-center justify-center h-[37px] w-[37px] rounded-full text-muted-foreground hover:text-foreground bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.09] border border-black/[0.06] dark:border-white/[0.08] active:scale-90 cursor-pointer transition-all duration-200 outline-none shadow-2xs"
         aria-label={getThemeTitle()}
         title={getThemeTitle()}
       >

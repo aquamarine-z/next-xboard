@@ -44,7 +44,9 @@
     "language": {
       "toggle": "Toggle Language",
       "zh_CN": "简体中文",
-      "en_US": "English"
+      "en_US": "English",
+      "ja_JP": "日本語",
+      "ko_KR": "한국어"
     }
   },
   "auth": {
@@ -160,6 +162,7 @@
   "tickets": {
     "title": "Support Tickets",
     "subtitle": "Submit and track your technical inquiries",
+    "desc": "Submit inquiries and get technical support",
     "create_ticket": "New Ticket",
     "ticket_subject": "Subject",
     "ticket_level": "Priority",
@@ -204,7 +207,7 @@
     "third_party_integration": "Integrations & Alerts",
     "reset_success": "Subscription secret reset successfully. Credentials have been refreshed.",
     "password_prompt_title": "Change Account Password",
-    "password_prompt_message": "Please enter your new login password:",
+    "password_prompt_message": "Please enter your current password and new password:",
     "password_prompt_placeholder": "At least 8 characters",
     "new_password": "New Password",
     "confirm_new_password": "Confirm New Password",
@@ -229,6 +232,7 @@
   "knowledge": {
     "title": "Documentation",
     "subtitle": "Official client setup guides, tutorials, and FAQs",
+    "desc": "Client setup guides, tutorials and FAQs",
     "search_placeholder": "Search tutorials or keywords...",
     "all_categories": "All Categories",
     "empty": "No documentation articles available",
@@ -238,6 +242,9 @@
     "reading_time": "~{minutes} min read",
     "updated_at": "Updated {date}",
     "loading": "Loading documentation...",
-    "category": "Category"
+    "category": "Category",
+    "view_category": "View Category",
+    "clear_search": "Clear Search",
+    "other_category": "Other Guides"
   }
 }
