@@ -1,0 +1,69 @@
+{
+  "id": "/",
+  "name": "Aqua VPS",
+  "short_name": "Aqua VPS",
+  "description": "Aqua VPS 次世代极速云平台 - 搭载 iOS 26 空间流体交互与原生秒级启动",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "window-controls-overlay", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "zh-CN",
+  "categories": ["utilities", "productivity", "connectivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "控制台 Dashboard",
+      "short_name": "控制台",
+      "description": "查看剩余流量、订阅到期时间与节点状态",
+      "url": "/zh-CN/dashboard",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "节点列表 Nodes",
+      "short_name": "节点",
+      "description": "查看所有可用节点、测速与直连配置",
+      "url": "/zh-CN/nodes",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "订阅商店 Shop",
+      "short_name": "商店",
+      "description": "购买或续费高速流量订阅套餐",
+      "url": "/zh-CN/shop",
+      "icons": [{ "src": "/icons/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

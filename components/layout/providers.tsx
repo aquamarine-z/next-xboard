@@ -7,6 +7,7 @@ import { I18nProvider } from "@/lib/i18n/context";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionary";
 import { DocumentTitle } from "./document-title";
 import { Toaster } from "@/components/ui/sonner";
+import { PwaProvider } from "@/components/pwa/pwa-provider";
 
 export function AppProviders({
   children,
@@ -27,7 +28,9 @@ export function AppProviders({
       <I18nProvider initialLocale={locale} initialDictionary={dictionary}>
         <DocumentTitle />
         <NiceModal.Provider>
-          {children}
+          <PwaProvider>
+            {children}
+          </PwaProvider>
           <Toaster />
         </NiceModal.Provider>
       </I18nProvider>
