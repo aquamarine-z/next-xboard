@@ -740,7 +740,7 @@ export default function ProfilePage() {
                           defaultText={t("invites.copy_code")}
                           copiedText={t("common.copied")}
                           size="sm"
-                          variant="ghost"
+                          mode="text"
                           className="h-7 text-xs px-2"
                         />
                       </div>

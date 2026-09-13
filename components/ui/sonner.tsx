@@ -22,8 +22,8 @@ export function AppleNotificationBanner({
   const statusConfig = {
     success: {
       icon: Check,
-      iconColor: "text-emerald-600 dark:text-emerald-400",
-      bg: "bg-emerald-500/15 border-emerald-500/20",
+      iconColor: "text-[#34C759] dark:text-[#30D158]",
+      bg: "bg-[#34C759]/15 dark:bg-[#30D158]/20 border-[#34C759]/25 dark:border-[#30D158]/30",
     },
     error: {
       icon: AlertCircle,
@@ -105,7 +105,7 @@ export function Toaster({ ...props }: ToasterProps) {
       theme={theme as ToasterProps["theme"]}
       position={isDesktop ? "bottom-right" : "top-center"}
       offset={isDesktop ? 24 : 100}
-      visibleToasts={isDesktop ? 3 : 2}
+      visibleToasts={3}
       expand={false}
       className="toaster group"
       {...props}
@@ -118,7 +118,8 @@ function notify(
   message: React.ReactNode,
   data?: any
 ) {
-  const toastId = data?.id || (typeof message === "string" ? message : undefined);
+  // Allow new notifications to stack independently up to visibleToasts=3
+  const toastId = data?.id;
   return sonnerToast.custom(
     (id) => (
       <AppleNotificationBanner
