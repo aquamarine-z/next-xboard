@@ -47,7 +47,7 @@ export function AppleNotificationBanner({
   return (
     <div
       onClick={() => sonnerToast.dismiss(id)}
-      className="relative w-auto min-w-[260px] max-w-[min(calc(100vw-32px),440px)] rounded-[20px] py-2.5 px-4 sm:px-4.5 transition-all duration-300 select-none cursor-pointer overflow-hidden backdrop-blur-3xl backdrop-saturate-200 bg-white/85 dark:bg-[#1c1c1e]/88 border border-black/[0.08] dark:border-white/[0.14] shadow-[0_16px_36px_rgba(0,0,0,0.12),0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.95)] dark:shadow-[0_20px_42px_rgba(0,0,0,0.6),0_4px_14px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.2)] active:scale-[0.98] flex items-center gap-3"
+      className="relative w-[356px] max-w-[calc(100vw-32px)] rounded-[20px] py-2.5 px-4 sm:px-4.5 transition-all duration-300 select-none cursor-pointer overflow-hidden backdrop-blur-3xl backdrop-saturate-200 bg-white/85 dark:bg-[#1c1c1e]/88 border border-black/[0.08] dark:border-white/[0.14] shadow-[0_16px_36px_rgba(0,0,0,0.12),0_4px_10px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.95)] dark:shadow-[0_20px_42px_rgba(0,0,0,0.6),0_4px_14px_rgba(0,0,0,0.35),inset_0_1px_1px_rgba(255,255,255,0.2)] active:scale-[0.98] flex items-center gap-3"
     >
       {/* Prismatic Top Sheen Line (次世代空间高光切面) */}
       <div className="absolute inset-x-4 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/95 dark:via-white/35 to-transparent pointer-events-none" />
@@ -64,12 +64,12 @@ export function AppleNotificationBanner({
       </div>
 
       {/* Content (Title & Description) - Natural Left Aligned */}
-      <div className="flex flex-col justify-center min-w-0 text-left">
-        <p className="text-[13px] font-medium text-foreground/75 dark:text-foreground/80 tracking-tight leading-snug break-words">
+      <div className="flex flex-col justify-center min-w-0 flex-1 text-left">
+        <p className="text-[13px] font-medium text-foreground/85 dark:text-foreground/90 tracking-tight leading-snug break-words whitespace-normal [overflow-wrap:anywhere]">
           {title}
         </p>
         {description && (
-          <p className="text-[11.5px] text-foreground/50 dark:text-foreground/55 leading-normal mt-0.5 break-words">
+          <p className="text-[11.5px] text-foreground/55 dark:text-foreground/60 leading-normal mt-0.5 break-words whitespace-normal [overflow-wrap:anywhere]">
             {description}
           </p>
         )}

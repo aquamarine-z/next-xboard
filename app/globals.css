@@ -470,7 +470,7 @@
   right: 0 !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  width: max-content !important;
+  width: 356px !important;
   max-width: calc(100vw - 32px) !important;
   display: flex !important;
   justify-content: center !important;
@@ -482,7 +482,8 @@
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
-  width: auto !important;
+  width: 356px !important;
+  max-width: calc(100vw - 32px) !important;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
 }
 
