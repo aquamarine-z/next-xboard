@@ -48,7 +48,7 @@ export function AppleBottomNav() {
   return (
     <nav className="md:hidden fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] left-4 right-4 max-w-[390px] mx-auto z-40 select-none">
       {/* Liquid Glass Island Container */}
-      <div className="rounded-full liquid-glass-island p-1.5 transition-all">
+      <div className="rounded-full liquid-glass-island border border-black/[0.08] dark:border-white/[0.14] p-1.5 transition-all">
         {/* Sliding Liquid Active Indicator Pill */}
         {activeIndex >= 0 && (
           <div

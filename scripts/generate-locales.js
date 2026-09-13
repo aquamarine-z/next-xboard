@@ -239,9 +239,9 @@ const enUS = {
     traffic_total: "Total Quota",
     traffic_remaining: "Remaining Data",
     traffic_reset: "Resets in {days} days",
-    quick_import: "Quick Import",
+    quick_import: "Import",
     quick_import_desc: "One-click configuration for popular clients or copy subscription URL manually",
-    copy_subscription: "Copy Subscription URL",
+    copy_subscription: "Copy Link",
     clients: {
       clash: "Import to Clash",
       shadowrocket: "Import to Shadowrocket",

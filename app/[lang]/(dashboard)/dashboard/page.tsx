@@ -449,7 +449,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => openQuickImportDialog(subscribe.subscribe_url, t)}
-                className="h-11 w-full rounded-full bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs font-medium text-xs sm:text-sm transition-all duration-200 ios-touch-feedback active:scale-[0.98] cursor-pointer select-none"
+                className="h-11 w-full rounded-full bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center justify-center gap-1.5 sm:gap-2 shadow-xs font-medium text-[13px] sm:text-sm transition-all duration-200 ios-touch-feedback active:scale-[0.98] cursor-pointer select-none px-3"
               >
                 <Download className="w-4 h-4 shrink-0" />
                 <span className="truncate">{t("dashboard.quick_import")}</span>
@@ -460,7 +460,7 @@ export default function DashboardPage() {
                 defaultText={t("dashboard.copy_subscription")}
                 copiedText={t("common.copied")}
                 variant="secondary"
-                className="h-11 w-full rounded-full border border-border/80 bg-secondary/60 hover:bg-secondary font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 ios-touch-feedback active:scale-[0.98] cursor-pointer select-none"
+                className="h-11 w-full rounded-full border border-border/80 bg-secondary/60 hover:bg-secondary font-medium text-[13px] sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 transition-all duration-200 ios-touch-feedback active:scale-[0.98] cursor-pointer select-none px-3"
               />
             </>
           ) : (

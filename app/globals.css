@@ -227,30 +227,40 @@
 
 .liquid-glass-island {
   position: relative;
-  background: rgba(255, 255, 255, 0.56);
-  backdrop-filter: blur(36px) saturate(220%) brightness(105%) contrast(104%);
-  -webkit-backdrop-filter: blur(36px) saturate(220%) brightness(105%) contrast(104%);
-  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0.36) 100%
+  );
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 
-    0 20px 48px -10px rgba(0, 0, 0, 0.14),
-    0 8px 20px -4px rgba(0, 0, 0, 0.06),
-    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.05),
-    inset 0 0 20px 0 rgba(255, 255, 255, 0.32);
+    0 16px 36px -8px rgba(0, 0, 0, 0.08),
+    0 4px 12px -2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.03);
   overflow: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .dark .liquid-glass-island {
-  background: rgba(18, 18, 22, 0.65);
-  backdrop-filter: blur(36px) saturate(200%) brightness(95%) contrast(110%);
-  -webkit-backdrop-filter: blur(36px) saturate(200%) brightness(95%) contrast(110%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(
+    180deg,
+    rgba(24, 24, 30, 0.72) 0%,
+    rgba(16, 16, 22, 0.58) 100%
+  );
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 
     0 24px 60px -10px rgba(0, 0, 0, 0.85),
     0 8px 24px -4px rgba(0, 0, 0, 0.5),
-    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35),
-    inset 0 0 25px 0 rgba(255, 255, 255, 0.05);
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* Prismatic top rim refraction line (液态高光切面) */
@@ -310,35 +320,45 @@
 
 .liquid-glass-segment-dock {
   position: relative;
-  background: rgba(255, 255, 255, 0.58);
-  backdrop-filter: blur(28px) saturate(210%) brightness(104%);
-  -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(104%);
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0.36) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.07);
   box-shadow: 
-    0 10px 26px -6px rgba(0, 0, 0, 0.08),
-    0 2px 6px -1px rgba(0, 0, 0, 0.04),
-    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.03),
-    inset 0 0 12px 0 rgba(255, 255, 255, 0.35);
+    0 10px 26px -6px rgba(0, 0, 0, 0.06),
+    0 2px 6px -1px rgba(0, 0, 0, 0.03),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.02);
   padding: 3.5px;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   user-select: none;
   overflow: hidden;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .dark .liquid-glass-segment-dock {
-  background: rgba(26, 26, 32, 0.64);
-  backdrop-filter: blur(28px) saturate(190%) brightness(96%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(96%);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(
+    180deg,
+    rgba(28, 28, 34, 0.72) 0%,
+    rgba(20, 20, 26, 0.58) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 
     0 12px 30px -6px rgba(0, 0, 0, 0.65),
     0 3px 8px -1px rgba(0, 0, 0, 0.4),
-    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.4),
-    inset 0 0 16px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.35);
 }
 
 /* Prismatic top rim line for segmented dock */
