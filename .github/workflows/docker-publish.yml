@@ -9,7 +9,7 @@ on:
       xboard_api_url:
         description: "Default Backend Xboard API URL"
         required: false
-        default: "https://cloud.aquamarinez.com"
+        default: "https://cloud.example.com"
         type: string
 
 env:
@@ -57,6 +57,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            XBOARD_API_URL=${{ inputs.xboard_api_url || 'https://cloud.aquamarinez.com' }}
+            XBOARD_API_URL=${{ inputs.xboard_api_url || 'https://cloud.example.com' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

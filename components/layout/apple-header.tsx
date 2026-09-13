@@ -142,13 +142,13 @@ export function AppleHeader() {
           {authenticated && user ? (
             <Link
               href={`/${locale}/profile`}
-              className="hidden md:inline-flex items-center gap-2 text-xs text-foreground/90 hover:text-foreground transition-all px-2 sm:px-2.5 py-1 rounded-full bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.09] border border-black/[0.04] dark:border-white/[0.06] select-none group"
+              className="hidden md:inline-flex items-center gap-2 h-[37px] text-xs text-foreground/90 hover:text-foreground transition-all px-3 rounded-full bg-black/[0.03] dark:bg-white/[0.05] hover:bg-black/[0.06] dark:hover:bg-white/[0.09] border border-black/[0.06] dark:border-white/[0.08] select-none group shadow-2xs shrink-0 active:scale-95"
               title={user.email}
             >
-              <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-[#0066cc]/25 to-[#2997ff]/25 text-[#0066cc] dark:text-[#2997ff] flex items-center justify-center font-bold text-[10px] shrink-0">
+              <div className="w-5.5 h-5.5 rounded-full bg-gradient-to-tr from-[#0066cc]/25 to-[#2997ff]/25 text-[#0066cc] dark:text-[#2997ff] flex items-center justify-center font-bold text-[11px] shrink-0 border border-[#0066cc]/20">
                 {user.email ? user.email.slice(0, 1).toUpperCase() : "U"}
               </div>
-              <span className="hidden xl:inline truncate max-w-[110px] text-[11px] font-medium text-muted-foreground group-hover:text-foreground">
+              <span className="hidden xl:inline truncate max-w-[120px] text-xs font-medium text-muted-foreground group-hover:text-foreground">
                 {user.email.split("@")[0]}
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 select-none animate-pulse" />
@@ -156,7 +156,7 @@ export function AppleHeader() {
           ) : (
             <Link
               href={`/${locale}/login`}
-              className="hidden md:inline-flex items-center gap-1.5 text-xs text-white font-medium transition-all px-3 py-1.5 rounded-full bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] shadow-xs select-none ios26-press shrink-0"
+              className="hidden md:inline-flex items-center justify-center h-[37px] gap-1.5 text-xs text-white font-medium transition-all px-4 rounded-full bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] shadow-xs select-none ios26-press shrink-0 active:scale-95"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>{t("auth.login_button")}</span>

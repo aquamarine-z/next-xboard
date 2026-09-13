@@ -1,0 +1,58 @@
+# Nginx 生产环境反向代理配置示例 (用于 your-domain.com / cloud.example.com)
+# 作用: 将 /api/v1/ 与 /api/v2/ 等后端核心请求转发至 Laravel 容器 (127.0.0.1:7001)
+#       将其余所有前端页面与 Next.js 内置路由转发至 Next.js 容器 (127.0.0.1:3000)
+
+server {
+    listen 80;
+    server_name cloud.example.com;
+
+    # 自动重定向 HTTP 到 HTTPS
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name cloud.example.com;
+
+    # SSL 证书配置 (请替换为您实际证书路径)
+    # ssl_certificate /etc/letsencrypt/live/cloud.example.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/cloud.example.com/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    client_max_body_size 50M;
+
+    # 1. 转发所有 Xboard 原生 Laravel 后端 API 接口 (容器端口 7001)
+    location ~ ^/(api/v1|api/v2|downloads)/ {
+        proxy_pass http://127.0.0.1:7001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Port $server_port;
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 10s;
+    }
+
+    # 2. 转发客户端订阅链接至 Laravel 容器 (容器端口 7001)
+    # 如需使用自定义 subscribe_path，可在此增加匹配，例如:
+    # location ~ ^/s/ {
+    #     proxy_pass http://127.0.0.1:7001;
+    #     proxy_set_header Host $host;
+    #     ...
+    # }
+
+    # 3. 转发 Next.js 前端应用及内部代理路由 (容器端口 3000)
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

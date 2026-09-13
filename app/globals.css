@@ -304,6 +304,120 @@
   box-shadow: 0 4px 18px 0 rgba(0, 0, 0, 0.65);
 }
 
+/* ==========================================================================
+   Apple iOS 26 Liquid Glass Segmented Controls (液态玻璃分段控制器)
+   ========================================================================== */
+
+.liquid-glass-segment-dock {
+  position: relative;
+  background: rgba(255, 255, 255, 0.58);
+  backdrop-filter: blur(28px) saturate(210%) brightness(104%);
+  -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(104%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 
+    0 10px 26px -6px rgba(0, 0, 0, 0.08),
+    0 2px 6px -1px rgba(0, 0, 0, 0.04),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.03),
+    inset 0 0 12px 0 rgba(255, 255, 255, 0.35);
+  padding: 3.5px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+  overflow: hidden;
+}
+
+.dark .liquid-glass-segment-dock {
+  background: rgba(26, 26, 32, 0.64);
+  backdrop-filter: blur(28px) saturate(190%) brightness(96%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) brightness(96%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 
+    0 12px 30px -6px rgba(0, 0, 0, 0.65),
+    0 3px 8px -1px rgba(0, 0, 0, 0.4),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.4),
+    inset 0 0 16px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Prismatic top rim line for segmented dock */
+.liquid-glass-segment-dock::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+.dark .liquid-glass-segment-dock::before {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+.liquid-glass-segment-active {
+  position: absolute;
+  top: 3.5px;
+  bottom: 3.5px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 246, 248, 0.90) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 
+    0 3px 12px 0 rgba(0, 0, 0, 0.09),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 1);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), width 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dark .liquid-glass-segment-active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.10) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 
+    0 4px 16px 0 rgba(0, 0, 0, 0.6),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+/* ==========================================================================
+   Apple iOS 26 Fade-In Gradient Animation (淡入渐变过渡动画)
+   ========================================================================== */
+
+@keyframes fadeInGradient {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.99);
+    filter: blur(4px);
+  }
+  60% {
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-fade-in-gradient {
+  animation: fadeInGradient 0.36s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
 .ios26-spring {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }

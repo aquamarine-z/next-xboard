@@ -7,7 +7,13 @@ import { useTranslation } from "@/lib/i18n/context";
 import { useUserStore } from "@/lib/store/userStore";
 import { formatDate } from "@/lib/format";
 import { AppleCopyButton } from "@/components/ui/apple-copy-button";
-import { appleDialog, openChangePasswordDialog } from "@/components/dialogs";
+import { AppleSwitch } from "@/components/ui/apple-switch";
+import {
+  appleDialog,
+  openChangePasswordDialog,
+  openCommissionTransferDialog,
+  openCommissionWithdrawDialog,
+} from "@/components/dialogs";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/sonner";
 import {
@@ -23,19 +29,185 @@ import {
   UserCheck,
   BookOpen,
   MessageSquare,
+  Bell,
+  Share2,
+  Users,
+  Percent,
+  Clock,
+  ArrowRightLeft,
+  HandCoins,
+  Plus,
+  Link as LinkIcon,
+  CheckCircle2,
+  Loader2,
+  History,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { AppleCloudIcon } from "@/components/ui/apple-icons";
+import type { XboardInviteCode, XboardInviteDetail } from "@/types/xboard";
 
 export default function ProfilePage() {
   const { t, locale } = useTranslation();
   const router = useRouter();
-  const { authenticated, user, subscribe, plans, fetchDashboardData, logout, tickets } = useUserStore();
+  const {
+    authenticated,
+    user,
+    subscribe,
+    plans,
+    fetchDashboardData,
+    updateUser,
+    logout,
+    tickets,
+  } = useUserStore();
+
+  // Notification switches local state
+  const [remindExpire, setRemindExpire] = React.useState(false);
+  const [remindTraffic, setRemindTraffic] = React.useState(false);
+
+  // Affiliate & Invites state
+  const [inviteCodes, setInviteCodes] = React.useState<XboardInviteCode[]>([]);
+  const [inviteStat, setInviteStat] = React.useState<number[]>([0, 10, 0, 0]);
+  const [inviteDetails, setInviteDetails] = React.useState<XboardInviteDetail[]>([]);
+  const [invitesLoading, setInvitesLoading] = React.useState(false);
+  const [generatingCode, setGeneratingCode] = React.useState(false);
+  const [showRecords, setShowRecords] = React.useState(false);
 
   React.useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // Derive user's current plan name accurately
+  React.useEffect(() => {
+    if (user) {
+      setRemindExpire(Boolean(user.remind_expire));
+      setRemindTraffic(Boolean(user.remind_traffic));
+    }
+  }, [user]);
+
+  // Fetch Invites Data
+  const fetchInvites = React.useCallback(async () => {
+    if (!authenticated) return;
+    setInvitesLoading(true);
+    try {
+      const [invRes, detailsRes] = await Promise.all([
+        fetch("/api/xboard?type=invites"),
+        fetch("/api/xboard?type=invite_details"),
+      ]);
+
+      if (invRes.ok) {
+        const data = await invRes.json();
+        if (data.codes && Array.isArray(data.codes)) {
+          setInviteCodes(data.codes);
+        }
+        if (data.stat && Array.isArray(data.stat)) {
+          setInviteStat(data.stat);
+        }
+      }
+
+      if (detailsRes.ok) {
+        const detailsData = await detailsRes.json();
+        if (Array.isArray(detailsData)) {
+          setInviteDetails(detailsData);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch invites data:", err);
+    } finally {
+      setInvitesLoading(false);
+    }
+  }, [authenticated]);
+
+  React.useEffect(() => {
+    fetchInvites();
+  }, [fetchInvites]);
+
+  // Notification switch handlers
+  const handleToggleRemindExpire = async (checked: boolean) => {
+    setRemindExpire(checked);
+    updateUser({ remind_expire: checked ? 1 : 0 });
+    try {
+      await fetch("/api/xboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_remind",
+          remind_expire: checked ? 1 : 0,
+          remind_traffic: remindTraffic ? 1 : 0,
+        }),
+      });
+      toast.success(t("notifications.save_success"));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleToggleRemindTraffic = async (checked: boolean) => {
+    setRemindTraffic(checked);
+    updateUser({ remind_traffic: checked ? 1 : 0 });
+    try {
+      await fetch("/api/xboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_remind",
+          remind_expire: remindExpire ? 1 : 0,
+          remind_traffic: checked ? 1 : 0,
+        }),
+      });
+      toast.success(t("notifications.save_success"));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Generate invite code
+  const handleGenerateCode = async () => {
+    setGeneratingCode(true);
+    try {
+      const res = await fetch("/api/xboard", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "generate_invite" }),
+      });
+      const data = await res.json();
+      if (res.ok && (data.data || data.success)) {
+        toast.success(t("invites.code_generated"));
+        fetchInvites();
+      } else {
+        toast.error(data.error || t("common.failed"));
+      }
+    } catch (err: any) {
+      toast.error(err.message || t("common.network_error"));
+    } finally {
+      setGeneratingCode(false);
+    }
+  };
+
+  // Transfer commission
+  const handleTransfer = () => {
+    openCommissionTransferDialog(
+      user?.commission_balance || 0,
+      t,
+      () => {
+        fetchDashboardData();
+        fetchInvites();
+      }
+    );
+  };
+
+  // Withdraw commission
+  const handleWithdraw = () => {
+    openCommissionWithdrawDialog(
+      user?.commission_balance || 0,
+      t,
+      () => {
+        fetchDashboardData();
+        fetchInvites();
+      }
+    );
+  };
+
+  // Current plan
   const currentPlan = React.useMemo(() => {
     if (!subscribe && !user) return null;
     if ((subscribe as any)?.plan?.name) return (subscribe as any).plan;
@@ -105,6 +277,13 @@ export default function ProfilePage() {
 
   const handleTelegramBind = () => {
     toast.info(t("profile.telegram_bot_hint"));
+  };
+
+  const getInviteUrl = (code: string) => {
+    if (typeof window !== "undefined") {
+      return `${window.location.origin}/#/register?code=${code}`;
+    }
+    return `code=${code}`;
   };
 
   return (
@@ -335,12 +514,6 @@ export default function ProfilePage() {
                     </p>
                     <p className="text-xs sm:text-[12.5px] text-muted-foreground font-mono leading-normal">
                       <span className="select-none">¥ </span>{((user.balance || 0) / 100).toFixed(2)}
-                      {Boolean(user.commission_balance && user.commission_balance > 0) && (
-                        <span>
-                          {" "}· <span className="select-none">{t("profile.commission_label")}: ¥ </span>
-                          {(user.commission_balance / 100).toFixed(2)}
-                        </span>
-                      )}
                     </p>
                   </div>
                 </div>
@@ -355,7 +528,284 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* 5. Inset Group 3: 第三方联动与通知 (Integrations & Notifications) */}
+          {/* 5. Inset Group 3: 消息与邮件通知提醒 (Merged Notifications Feature - Screenshot 4) */}
+          <div className="space-y-2.5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 select-none">
+              {t("notifications.title")}
+            </span>
+            <div className="rounded-[20px] border border-border bg-card overflow-hidden shadow-xs divide-y divide-border/60">
+              {/* Switch 1: Expire Reminder */}
+              <div className="py-4 px-5 sm:py-4.5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="w-9 h-9 rounded-[11px] bg-[#0066cc]/10 text-[#0066cc] dark:text-[#2997ff] flex items-center justify-center shrink-0 select-none">
+                    <Bell className="w-4.5 h-4.5 select-none" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-medium text-foreground tracking-tight select-none">
+                      {t("notifications.remind_expire")}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-normal select-none">
+                      {t("notifications.remind_expire_desc")}
+                    </p>
+                  </div>
+                </div>
+
+                <AppleSwitch
+                  checked={remindExpire}
+                  onCheckedChange={handleToggleRemindExpire}
+                  aria-label={t("notifications.remind_expire")}
+                />
+              </div>
+
+              {/* Switch 2: Traffic Quota Reminder */}
+              <div className="py-4 px-5 sm:py-4.5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="w-9 h-9 rounded-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 select-none">
+                    <History className="w-4.5 h-4.5 select-none" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-medium text-foreground tracking-tight select-none">
+                      {t("notifications.remind_traffic")}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-normal select-none">
+                      {t("notifications.remind_traffic_desc")}
+                    </p>
+                  </div>
+                </div>
+
+                <AppleSwitch
+                  checked={remindTraffic}
+                  onCheckedChange={handleToggleRemindTraffic}
+                  aria-label={t("notifications.remind_traffic")}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 6. Inset Group 4: 推广返利与我的邀请 (Merged Affiliate Feature - Screenshot 2) */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground select-none">
+                {t("invites.title")}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {t("invites.subtitle")}
+              </span>
+            </div>
+
+            {/* Top Commission Hero Card */}
+            <div className="rounded-[22px] border border-border bg-card p-5 sm:p-6 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+                <div className="space-y-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl sm:text-4xl font-semibold apple-hero text-foreground tracking-tight font-mono">
+                      {((user.commission_balance || 0) / 100).toFixed(2)}
+                    </span>
+                    <span className="text-sm font-semibold text-muted-foreground select-none">
+                      CNY
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("invites.commission_balance")}
+                  </p>
+                </div>
+
+                {/* Symmetric Action Pills */}
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleTransfer}
+                    className="apple-pill-btn h-9 px-4 rounded-full bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-all ios-touch-feedback active:scale-[0.98] cursor-pointer select-none"
+                  >
+                    <ArrowRightLeft className="w-3.5 h-3.5" />
+                    <span>{t("invites.transfer_to_balance")}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleWithdraw}
+                    className="apple-pill-btn h-9 px-4 rounded-full border border-border/80 bg-secondary/60 hover:bg-secondary text-foreground text-xs font-medium flex items-center gap-1.5 transition-all ios-touch-feedback active:scale-[0.98] cursor-pointer select-none"
+                  >
+                    <HandCoins className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff]" />
+                    <span>{t("invites.withdraw")}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 4 Stats Bento Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                {/* 1. Registered Users */}
+                <div className="p-3 rounded-[16px] bg-secondary/30 dark:bg-white/[0.02] border border-border/60 space-y-1">
+                  <span className="text-[11px] text-muted-foreground block select-none truncate">
+                    {t("invites.registered_users")}
+                  </span>
+                  <span className="text-sm sm:text-base font-semibold text-foreground font-mono">
+                    {inviteStat[0] ?? 0} {t("invites.registered_unit")}
+                  </span>
+                </div>
+
+                {/* 2. Commission Rate */}
+                <div className="p-3 rounded-[16px] bg-secondary/30 dark:bg-white/[0.02] border border-border/60 space-y-1">
+                  <span className="text-[11px] text-muted-foreground block select-none truncate">
+                    {t("invites.commission_rate")}
+                  </span>
+                  <span className="text-sm sm:text-base font-semibold text-foreground font-mono">
+                    {inviteStat[1] ?? 10}%
+                  </span>
+                </div>
+
+                {/* 3. Pending Commission */}
+                <div className="p-3 rounded-[16px] bg-secondary/30 dark:bg-white/[0.02] border border-border/60 space-y-1">
+                  <span className="text-[11px] text-muted-foreground block select-none truncate">
+                    {t("invites.pending_commission")}
+                  </span>
+                  <span className="text-sm sm:text-base font-semibold text-foreground font-mono">
+                    ¥{((inviteStat[2] ?? 0) / 100).toFixed(2)}
+                  </span>
+                </div>
+
+                {/* 4. Total Earned */}
+                <div className="p-3 rounded-[16px] bg-secondary/30 dark:bg-white/[0.02] border border-border/60 space-y-1">
+                  <span className="text-[11px] text-muted-foreground block select-none truncate">
+                    {t("invites.total_earned")}
+                  </span>
+                  <span className="text-sm sm:text-base font-semibold text-foreground font-mono">
+                    ¥{((inviteStat[3] ?? 0) / 100).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Invite Codes Management */}
+            <div className="rounded-[22px] border border-border bg-card p-5 shadow-xs space-y-3.5">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/60">
+                <div className="flex items-center gap-2">
+                  <Share2 className="w-4 h-4 text-[#0071e3]" />
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {t("invites.manage_codes")}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleGenerateCode}
+                  disabled={generatingCode}
+                  className="apple-pill-btn h-7 px-3 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium flex items-center gap-1 shadow-2xs select-none cursor-pointer"
+                >
+                  {generatingCode ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Plus className="w-3.5 h-3.5" />
+                  )}
+                  <span>{t("invites.generate_code")}</span>
+                </button>
+              </div>
+
+              {inviteCodes.length === 0 ? (
+                <div className="py-8 text-center text-xs text-muted-foreground">
+                  {t("invites.empty_codes")}
+                </div>
+              ) : (
+                <div className="divide-y divide-border/50 text-xs">
+                  {inviteCodes.map((inv) => (
+                    <div
+                      key={inv.id}
+                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-semibold text-sm text-foreground">
+                            {inv.code}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 select-none">
+                            Active
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground font-mono">
+                          {formatDate(inv.created_at)}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <AppleCopyButton
+                          textToCopy={getInviteUrl(inv.code)}
+                          defaultText={t("invites.copy_invite_link")}
+                          copiedText={t("common.copied")}
+                          size="sm"
+                          variant="secondary"
+                          className="h-7 text-xs px-2.5"
+                        />
+                        <AppleCopyButton
+                          textToCopy={inv.code}
+                          defaultText={t("invites.copy_code")}
+                          copiedText={t("common.copied")}
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-xs px-2"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Commission Payout Records Collapsible Card */}
+            <div className="rounded-[22px] border border-border bg-card overflow-hidden shadow-xs">
+              <button
+                type="button"
+                onClick={() => setShowRecords(!showRecords)}
+                className="w-full p-4.5 flex items-center justify-between text-left hover:bg-secondary/20 transition-colors select-none cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-foreground">
+                    {t("invites.commission_records")}
+                  </span>
+                  {inviteDetails.length > 0 && (
+                    <span className="px-1.5 py-0.2 rounded-full bg-secondary text-muted-foreground text-[10px] font-mono border border-border/60">
+                      {inviteDetails.length}
+                    </span>
+                  )}
+                </div>
+                {showRecords ? (
+                  <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                )}
+              </button>
+
+              {showRecords && (
+                <div className="p-4 pt-0 border-t border-border/60">
+                  {inviteDetails.length === 0 ? (
+                    <div className="py-6 text-center text-xs text-muted-foreground">
+                      {t("invites.empty_records")}
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border/50 text-xs">
+                      {inviteDetails.map((record) => (
+                        <div
+                          key={record.id}
+                          className="py-2.5 flex items-center justify-between"
+                        >
+                          <div className="space-y-0.5">
+                            <span className="font-mono text-muted-foreground text-[11px] block">
+                              {formatDate(record.created_at)}
+                            </span>
+                          </div>
+                          <span className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                            +¥{(record.get_amount / 100).toFixed(2)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 7. Inset Group 5: 第三方联动 (Telegram Integration) */}
           <div className="space-y-2.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 select-none">
               {t("profile.third_party_integration")}
@@ -388,7 +838,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* 6. Inset Group: 帮助与服务支持 (Support & Resources) */}
+          {/* 8. Inset Group 6: 帮助与服务支持 (Support & Resources) */}
           <div className="space-y-2.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 select-none">
               {t("common.nav.tickets")} & {t("common.nav.knowledge")}
@@ -452,7 +902,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* 7. Inset Group: 退出登录 (Sign Out Action) */}
+          {/* 9. Inset Group 7: 退出登录 (Sign Out Action) */}
           <div className="pt-2">
             <button
               type="button"

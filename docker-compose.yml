@@ -7,6 +7,7 @@ services:
       - "3000:3000"
     environment:
       # 可随时替换为您自己的 Xboard 后端 API 地址
-      - XBOARD_API_URL=https://cloud.aquamarinez.com
+      - XBOARD_API_URL=${XBOARD_API_URL:-https://cloud.example.com}
+      - XBOARD_BACKUP_API_URL=${XBOARD_BACKUP_API_URL:-}
       - PORT=3000
       - NODE_ENV=production

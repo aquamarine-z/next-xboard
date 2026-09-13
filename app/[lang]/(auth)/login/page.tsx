@@ -42,6 +42,7 @@ export default function LoginPage() {
         throw new Error(data.error || t("common.failed"));
       }
 
+      await fetchDashboardData();
       router.push(`/${locale}/dashboard`);
       router.refresh();
     } catch (err: any) {

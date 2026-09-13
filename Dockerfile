@@ -29,7 +29,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build Arguments (Default backend URL can be overridden at build time)
-ARG XBOARD_API_URL="https://cloud.aquamarinez.com"
+ARG XBOARD_API_URL="https://cloud.example.com"
 ENV XBOARD_API_URL=${XBOARD_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
@@ -47,7 +47,7 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Runtime environment variable (can be passed via `docker run -e XBOARD_API_URL=...`)
-ENV XBOARD_API_URL="https://cloud.aquamarinez.com"
+ENV XBOARD_API_URL="https://cloud.example.com"
 
 # Create a non-root dedicated user for security
 RUN addgroup --system --gid 1001 nodejs && \

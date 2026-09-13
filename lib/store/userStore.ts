@@ -22,6 +22,7 @@ interface UserState {
   error: string | null;
   fetchDashboardData: () => Promise<void>;
   setUser: (user: XboardUser | null) => void;
+  updateUser: (partial: Partial<XboardUser>) => void;
   logout: () => Promise<void>;
 }
 
@@ -72,6 +73,11 @@ export const useUserStore = create<UserState>((set) => ({
   },
 
   setUser: (user) => set({ user }),
+
+  updateUser: (partial) =>
+    set((state) => ({
+      user: state.user ? { ...state.user, ...partial } : null,
+    })),
 
   logout: async () => {
     try {

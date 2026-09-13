@@ -22,23 +22,21 @@ export async function POST(request: Request) {
     );
 
     if (result.error || !result.data) {
-      // Mock fallback for local development if real backend is not set
-      if (!process.env.XBOARD_API_URL) {
-        const mockToken = "mock_token_" + Buffer.from(email).toString("base64");
-        await setSessionToken(mockToken);
-        return NextResponse.json({ success: true, token: mockToken, is_mock: true });
-      }
-      return NextResponse.json({ error: result.error }, { status: result.status });
+      return NextResponse.json(
+        { error: result.error || "登录失败，请检查账号密码" },
+        { status: result.status || 400 }
+      );
     }
 
     const token =
       typeof result.data === "string"
         ? result.data
         : (result.data as any)?.auth_data || (result.data as any)?.token || "";
-    if (token) {
-      await setSessionToken(token);
+    if (!token) {
+      return NextResponse.json({ error: "未能从后端获取有效登录令牌" }, { status: 400 });
     }
 
+    await setSessionToken(token);
     return NextResponse.json({ success: true, data: result.data });
   } catch (error: any) {
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });

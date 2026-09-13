@@ -106,3 +106,72 @@ export interface XboardKnowledge {
   created_at?: number;
   updated_at: number;
 }
+
+export interface XboardOrder {
+  id: number;
+  trade_no: string;
+  order_type?: number;
+  plan_id: number;
+  plan?: {
+    id: number;
+    name: string;
+    transfer_enable?: number;
+  };
+  period: string; // month_price, quarter_price, half_year_price, year_price, two_year_price, three_year_price, onetime_price, reset_price
+  total_amount: number; // in cents (100 = 1元)
+  status: number; // 0=pending/unpaid, 1=completed, 2=cancelled, 3=abnormal
+  created_at: number;
+  updated_at?: number;
+  callback_no?: string;
+  balance_amount?: number;
+  surplus_amount?: number;
+  discount_amount?: number;
+  coupon_id?: number;
+}
+
+export interface XboardTrafficLog {
+  id?: number;
+  record_at: number | string; // timestamp or date string YYYY-MM-DD
+  u: number; // upload in bytes
+  d: number; // download in bytes
+  server_rate?: number | string;
+  rate?: number | string;
+  total?: number; // total in bytes
+}
+
+export interface XboardInviteCode {
+  id: number;
+  user_id: number;
+  code: string;
+  status: number; // 0=unused/active, 1=used
+  pv?: number;
+  created_at: number;
+  updated_at?: number;
+}
+
+export interface XboardInviteDetail {
+  id: number;
+  user_id?: number;
+  created_at: number;
+  updated_at?: number;
+  order_amount?: number;
+  get_amount: number; // in cents
+  status?: number;
+  order_id?: number;
+}
+
+export interface XboardInviteStat {
+  registered_count: number;
+  commission_rate: number;
+  pending_commission: number; // in cents
+  total_commission: number; // in cents
+}
+
+export interface XboardPaymentMethod {
+  id: number;
+  name: string;
+  payment: string;
+  icon?: string;
+  handling_fee_percent?: number;
+  handling_fee_fixed?: number;
+}

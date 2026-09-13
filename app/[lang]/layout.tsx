@@ -56,14 +56,7 @@ export async function generateMetadata({
       telephone: false,
     },
     icons: {
-      icon: [
-        { url: "/favicon.svg", type: "image/svg+xml" },
-        { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-        { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
-      ],
-      apple: [
-        { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-      ],
+      icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
     },
   };
 }
@@ -100,6 +93,8 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
+        <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
         <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

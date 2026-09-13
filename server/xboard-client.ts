@@ -1,7 +1,11 @@
 import { getSessionToken } from "./session";
 
 export function getXboardBaseUrl(): string {
-  return process.env.XBOARD_API_URL || "https://cloud.aquamarinez.com";
+  return process.env.XBOARD_API_URL || "https://cloud.example.com";
+}
+
+export function getXboardBackupBaseUrl(): string {
+  return process.env.XBOARD_BACKUP_API_URL || "";
 }
 
 interface FetchOptions extends RequestInit {
@@ -11,7 +15,7 @@ interface FetchOptions extends RequestInit {
 export async function xboardFetch<T = any>(
   endpoint: string,
   options: FetchOptions = {}
-): Promise<{ data: T | null; error?: string; status: number }> {
+): Promise<{ data: T | null; total?: number; raw?: any; error?: string; status: number }> {
   const { requiresAuth = true, headers = {}, ...rest } = options;
 
   const requestHeaders: Record<string, string> = {
@@ -24,42 +28,58 @@ export async function xboardFetch<T = any>(
   if (requiresAuth) {
     const token = await getSessionToken();
     if (token) {
-      requestHeaders["Authorization"] = token;
+      const authValue = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+      requestHeaders["Authorization"] = authValue;
       requestHeaders["auth-data"] = token;
     }
   }
 
-  const baseUrl = getXboardBaseUrl();
-  const url = `${baseUrl.replace(/\/$/, "")}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const normalizedEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const baseUrls = [
+    getXboardBaseUrl().replace(/\/$/, ""),
+    getXboardBackupBaseUrl().replace(/\/$/, ""),
+  ];
 
-  try {
-    const res = await fetch(url, {
-      ...rest,
-      headers: requestHeaders,
-      cache: "no-store",
-    });
+  let lastError = "Failed to communicate with Xboard backend";
+  let lastStatus = 500;
 
-    const json = await res.json().catch(() => null);
+  for (const baseUrl of baseUrls) {
+    const url = `${baseUrl}${normalizedEndpoint}`;
+    try {
+      const res = await fetch(url, {
+        ...rest,
+        headers: requestHeaders,
+        cache: "no-store",
+      });
 
-    if (!res.ok) {
+      const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        return {
+          data: null,
+          error: json?.message || `Xboard API error: ${res.statusText}`,
+          status: res.status,
+        };
+      }
+
       return {
-        data: null,
-        error: json?.message || `Xboard API error: ${res.statusText}`,
+        data: json?.data !== undefined ? json.data : json,
+        total: typeof json?.total === "number" ? json.total : undefined,
+        raw: json,
         status: res.status,
       };
+    } catch (err: any) {
+      lastError = err?.message || "Failed to communicate with Xboard backend";
+      lastStatus = 500;
+      // Try next base URL if network error occurred
     }
-
-    return {
-      data: json?.data !== undefined ? json.data : json,
-      status: res.status,
-    };
-  } catch (err: any) {
-    return {
-      data: null,
-      error: err?.message || "Failed to communicate with Xboard backend",
-      status: 500,
-    };
   }
+
+  return {
+    data: null,
+    error: lastError,
+    status: lastStatus,
+  };
 }
 
 export interface XboardSiteMeta {

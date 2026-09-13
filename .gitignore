@@ -34,7 +34,12 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 .npmrc
+
+# Internal backend documentation with server info
+API_DOCS.md
+API_DOCS/
 
 # vercel
 .vercel
@@ -42,3 +47,4 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
