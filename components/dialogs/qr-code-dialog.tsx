@@ -15,6 +15,13 @@ export interface QrCodeModalProps {
 export function QrCodeModal({ subscribeUrl, t, close }: QrCodeModalProps) {
   const [dataUrl, setDataUrl] = React.useState<string>("");
   const [copied, setCopied] = React.useState(false);
+  const copyTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!subscribeUrl) return;
@@ -53,8 +60,12 @@ export function QrCodeModal({ subscribeUrl, t, close }: QrCodeModalProps) {
     e.stopPropagation();
     e.preventDefault();
     navigator.clipboard.writeText(subscribeUrl);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copyTimerRef.current = setTimeout(() => {
+      setCopied(false);
+      copyTimerRef.current = null;
+    }, 3000);
   };
 
   return (

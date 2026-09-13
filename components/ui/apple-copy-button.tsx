@@ -26,6 +26,15 @@ export function AppleCopyButton({
   onCopied,
 }: AppleCopyButtonProps) {
   const [copied, setCopied] = React.useState(false);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -44,9 +53,20 @@ export function AppleCopyButton({
         document.execCommand("copy");
         document.body.removeChild(textarea);
       }
+
+      // If already copied or previous timer running, clear it and restart countdown
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
       setCopied(true);
       onCopied?.();
-      setTimeout(() => setCopied(false), 2000);
+
+      // Extended timeout from 2000ms to 3000ms (+1s), and refresh timer on re-click
+      timerRef.current = setTimeout(() => {
+        setCopied(false);
+        timerRef.current = null;
+      }, 3000);
     } catch (err) {
       console.error("Failed to copy:", err);
     }

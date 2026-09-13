@@ -18,7 +18,14 @@ export function NodeConnectModal({
 }: NodeConnectModalProps) {
   const [qrUrl, setQrUrl] = React.useState<string>("");
   const [copied, setCopied] = React.useState(false);
+  const copyTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const nodeUri = `${server.type.toLowerCase()}://${server.name}`;
+
+  React.useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
+    };
+  }, []);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -42,8 +49,12 @@ export function NodeConnectModal({
     e.stopPropagation();
     e.preventDefault();
     navigator.clipboard.writeText(nodeUri);
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    copyTimerRef.current = setTimeout(() => {
+      setCopied(false);
+      copyTimerRef.current = null;
+    }, 3000);
   };
 
   return (
