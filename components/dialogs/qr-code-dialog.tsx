@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import { Download, ChevronLeft, Check, Copy } from "lucide-react";
 import { dialog, SurfaceDialogContent } from "@/components/ui/surface";
 import { openQuickImportDialog } from "@/components/dialogs/quick-import-dialog";
+import { useCopy } from "@/hooks/use-copy";
 
 export interface QrCodeModalProps {
   subscribeUrl: string;
@@ -14,14 +15,7 @@ export interface QrCodeModalProps {
 
 export function QrCodeModal({ subscribeUrl, t, close }: QrCodeModalProps) {
   const [dataUrl, setDataUrl] = React.useState<string>("");
-  const [copied, setCopied] = React.useState(false);
-  const copyTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  React.useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-    };
-  }, []);
+  const { copied, copy } = useCopy();
 
   React.useEffect(() => {
     if (!subscribeUrl) return;
@@ -59,13 +53,7 @@ export function QrCodeModal({ subscribeUrl, t, close }: QrCodeModalProps) {
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    navigator.clipboard.writeText(subscribeUrl);
-    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-    setCopied(true);
-    copyTimerRef.current = setTimeout(() => {
-      setCopied(false);
-      copyTimerRef.current = null;
-    }, 3000);
+    void copy(subscribeUrl);
   };
 
   return (

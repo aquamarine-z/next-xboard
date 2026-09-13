@@ -3,6 +3,9 @@
 import * as React from "react";
 import { Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/hooks/use-copy";
+
+export { useCopy };
 
 export interface AppleCopyButtonProps {
   textToCopy: string;
@@ -25,51 +28,11 @@ export function AppleCopyButton({
   showText = true,
   onCopied,
 }: AppleCopyButtonProps) {
-  const [copied, setCopied] = React.useState(false);
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  React.useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
+  const { copied, copy } = useCopy({ onCopied });
 
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!textToCopy) return;
-
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(textToCopy);
-      } else {
-        const textarea = document.createElement("textarea");
-        textarea.value = textToCopy;
-        textarea.style.position = "fixed";
-        textarea.style.opacity = "0";
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand("copy");
-        document.body.removeChild(textarea);
-      }
-
-      // If already copied or previous timer running, clear it and restart countdown
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-
-      setCopied(true);
-      onCopied?.();
-
-      // Extended timeout from 2000ms to 3000ms (+1s), and refresh timer on re-click
-      timerRef.current = setTimeout(() => {
-        setCopied(false);
-        timerRef.current = null;
-      }, 3000);
-    } catch (err) {
-      console.error("Failed to copy:", err);
-    }
+    await copy(textToCopy);
   };
 
   const sizeClasses =

@@ -4,6 +4,7 @@ import * as React from "react";
 import QRCode from "qrcode";
 import { Server, Check, Copy } from "lucide-react";
 import { dialog, SurfaceDialogContent } from "@/components/ui/surface";
+import { useCopy } from "@/hooks/use-copy";
 
 export interface NodeConnectModalProps {
   server: { name: string; type: string; rate?: string | number };
@@ -17,15 +18,8 @@ export function NodeConnectModal({
   close,
 }: NodeConnectModalProps) {
   const [qrUrl, setQrUrl] = React.useState<string>("");
-  const [copied, setCopied] = React.useState(false);
-  const copyTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { copied, copy } = useCopy();
   const nodeUri = `${server.type.toLowerCase()}://${server.name}`;
-
-  React.useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-    };
-  }, []);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -48,13 +42,7 @@ export function NodeConnectModal({
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    navigator.clipboard.writeText(nodeUri);
-    if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
-    setCopied(true);
-    copyTimerRef.current = setTimeout(() => {
-      setCopied(false);
-      copyTimerRef.current = null;
-    }, 3000);
+    void copy(nodeUri);
   };
 
   return (
