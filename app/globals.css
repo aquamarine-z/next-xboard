@@ -495,5 +495,5 @@
 }
 
 [data-sonner-toaster][data-y-position='top'] {
-  top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem)) !important;
+  top: max(6.25rem, calc(env(safe-area-inset-top, 0px) + 5.5rem)) !important;
 }

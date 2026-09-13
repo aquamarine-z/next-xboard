@@ -104,7 +104,7 @@ export function Toaster({ ...props }: ToasterProps) {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       position={isDesktop ? "bottom-right" : "top-center"}
-      offset={isDesktop ? 24 : 16}
+      offset={isDesktop ? 24 : 100}
       visibleToasts={isDesktop ? 3 : 2}
       expand={false}
       className="toaster group"
