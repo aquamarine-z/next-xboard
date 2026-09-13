@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Copy, Check } from "lucide-react";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 export interface AppleCopyButtonProps {
   textToCopy: string;
@@ -54,22 +54,22 @@ export function AppleCopyButton({
 
   const sizeClasses =
     size === "sm"
-      ? (showText ? "h-7 min-w-[76px] sm:min-w-[84px] px-3 sm:px-3.5 text-[11px]" : "h-7 w-7 p-0 text-[11px] shrink-0")
+      ? (showText ? "h-7 min-w-[84px] sm:min-w-[88px] px-3 sm:px-3.5 text-[11px] font-medium" : "h-7 w-7 p-0 text-[11px] font-medium shrink-0")
       : (showText ? "h-10 min-w-24 px-3.5 text-xs font-medium" : "h-10 w-10 p-0 text-xs font-medium shrink-0");
 
   let variantClasses = "";
   if (variant === "primary") {
     variantClasses = copied
-      ? "bg-gradient-to-r from-emerald-500 to-teal-600 !text-white shadow-sm"
-      : "bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white shadow-xs";
+      ? "border border-transparent bg-gradient-to-r from-emerald-500 to-teal-600 !text-white shadow-sm"
+      : "border border-transparent bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white shadow-xs";
   } else if (variant === "secondary") {
     variantClasses = copied
-      ? "bg-gradient-to-r from-emerald-500 to-teal-600 !text-white border-transparent shadow-sm"
+      ? "border border-transparent bg-gradient-to-r from-emerald-500 to-teal-600 !text-white shadow-sm"
       : "border border-border/80 bg-secondary/50 text-[#48484a] dark:text-[#d1d1d6] hover:text-foreground hover:bg-secondary";
   } else {
     variantClasses = copied
-      ? "bg-emerald-500/10 !text-emerald-600 dark:!text-emerald-400"
-      : "text-[#636366] dark:text-[#a1a1a6] hover:text-foreground hover:bg-secondary";
+      ? "border border-transparent bg-emerald-500/10 !text-emerald-600 dark:!text-emerald-400"
+      : "border border-transparent text-[#636366] dark:text-[#a1a1a6] hover:text-foreground hover:bg-secondary";
   }
 
   return (
@@ -78,7 +78,7 @@ export function AppleCopyButton({
       onClick={handleCopy}
       aria-label={copied ? copiedText : defaultText}
       className={cn(
-        "apple-pill-btn relative overflow-hidden inline-flex items-center justify-center text-center select-none active:scale-95 transition-all duration-200 ease-out",
+        "apple-pill-btn relative overflow-hidden inline-flex items-center justify-center text-center select-none active:scale-95 transition-[background-color,border-color,color,box-shadow,transform] duration-200 ease-out",
         copied ? "!text-white" : "",
         sizeClasses,
         variantClasses,
@@ -94,8 +94,8 @@ export function AppleCopyButton({
             copied ? "opacity-0 invisible pointer-events-none" : "opacity-100 visible"
           )}
         >
-          <Copy className="w-3.5 h-3.5 shrink-0 opacity-75" />
-          {showText && <span className="leading-none whitespace-nowrap">{defaultText}</span>}
+          <Copy className="w-3.5 h-3.5 shrink-0 opacity-75 stroke-[2.2]" />
+          {showText && <span className="leading-none whitespace-nowrap font-medium">{defaultText}</span>}
         </span>
 
         {/* Copied State: Check Icon + Copied Text (Pure White) */}
@@ -105,7 +105,7 @@ export function AppleCopyButton({
             copied ? "opacity-100 visible !text-white" : "opacity-0 invisible pointer-events-none"
           )}
         >
-          <Check className="w-3.5 h-3.5 shrink-0 !text-white stroke-[2.4]" />
+          <Check className="w-3.5 h-3.5 shrink-0 !text-white stroke-[2.2]" />
           {showText && <span className="leading-none whitespace-nowrap !text-white font-medium">{copiedText}</span>}
         </span>
       </span>
