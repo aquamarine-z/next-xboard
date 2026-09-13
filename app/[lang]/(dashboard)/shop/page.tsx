@@ -303,8 +303,19 @@ export default function ShopPage() {
       ) : (
         /* 2. My Orders View (Merged) */
         <div key="shop-orders-container" className="space-y-5 animate-fade-in-gradient">
-          {/* Status Filter Chips */}
-          <div className="relative inline-flex p-1 rounded-full liquid-glass-segment-dock select-none flex-wrap">
+          {/* iOS 26 Liquid Glass Segmented Dock for Order Filters */}
+          <div className="relative !grid grid-cols-4 p-1 rounded-full liquid-glass-segment-dock select-none self-start sm:self-auto">
+            {/* Sliding Liquid Active Indicator Pill */}
+            <div
+              className="liquid-glass-segment-active"
+              style={{
+                width: "calc((100% - 7px) / 4)",
+                left: "3.5px",
+                transform: `translateX(${
+                  (orderFilter === "all" ? 0 : orderFilter === "pending" ? 1 : orderFilter === "completed" ? 2 : 3) * 100
+                }%)`,
+              }}
+            />
             {(["all", "pending", "completed", "cancelled"] as const).map((filter) => {
               const isSelected = orderFilter === filter;
               return (
@@ -312,11 +323,12 @@ export default function ShopPage() {
                   key={filter}
                   type="button"
                   onClick={() => setOrderFilter(filter)}
-                  className={`relative z-10 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-medium transition-all ios-touch-feedback select-none cursor-pointer ${
+                  className={cn(
+                    "relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 select-none cursor-pointer flex items-center justify-center text-center ios26-press min-w-[62px] sm:min-w-[76px]",
                     isSelected
-                      ? "bg-white dark:bg-[#2c2c2e] text-foreground font-semibold shadow-xs border border-white/60 dark:border-white/10"
+                      ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  )}
                 >
                   {t(`orders.status_${filter}`)}
                 </button>
@@ -324,6 +336,7 @@ export default function ShopPage() {
             })}
           </div>
 
+          <div key={`orders-view-${orderFilter}`} className="space-y-4 animate-fade-in-gradient">
           {ordersLoading ? (
             <div className="p-16 text-center flex flex-col items-center justify-center gap-2 text-muted-foreground animate-fade-in-gradient">
               <Loader2 className="w-6 h-6 animate-spin text-[#0071e3]" />
@@ -514,6 +527,7 @@ export default function ShopPage() {
               </div>
             </>
           )}
+          </div>
         </div>
       )}
     </div>
