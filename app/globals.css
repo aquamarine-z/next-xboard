@@ -478,4 +478,22 @@
   padding: 0 !important;
   width: auto !important;
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease !important;
+}
+
+/* ==========================================================================
+   PWA & iOS Safe Area Positioning for Top Nav, Islands & Toasts
+   ========================================================================== */
+
+.pwa-safe-top {
+  padding-top: max(0.625rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
+}
+
+@media (min-width: 640px) {
+  .pwa-safe-top {
+    padding-top: max(0.875rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
+  }
+}
+
+[data-sonner-toaster][data-y-position='top'] {
+  top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem)) !important;
 }

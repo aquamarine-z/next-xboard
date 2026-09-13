@@ -71,7 +71,7 @@ export function AppleHeader() {
   const siteTitle = config?.title || config?.app_name || config?.app_description || t("common.app_name");
 
   return (
-    <header className="sticky top-2.5 sm:top-3.5 z-40 w-full px-3 sm:px-6 pointer-events-none transition-all duration-300">
+    <header className="sticky top-0 z-40 w-full px-3 sm:px-6 pointer-events-none pwa-safe-top pb-2 transition-all duration-300">
       <div className="max-w-6xl w-full mx-auto h-[60px] sm:h-[64px] rounded-full pointer-events-auto liquid-glass-island border border-black/[0.08] dark:border-white/[0.14] px-4 sm:px-5.5 flex items-center justify-between gap-3 sm:gap-4 transition-all">
         {/* Left: Apple Brand Capsule & Status Indicator */}
         <div className="flex-1 flex items-center justify-start min-w-0">

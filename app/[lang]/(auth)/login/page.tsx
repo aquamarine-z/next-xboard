@@ -54,7 +54,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 relative">
-      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+      <div className="absolute top-[max(1rem,calc(env(safe-area-inset-top,0px)+0.75rem))] right-4 sm:top-6 sm:right-6">
         <ThemeLanguageToggle />
       </div>
       <div className="w-full max-w-md apple-utility-card p-8 sm:p-10 space-y-8 bg-card shadow-sm border border-border">
