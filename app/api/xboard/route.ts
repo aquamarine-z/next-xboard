@@ -331,9 +331,14 @@ export async function POST(request: Request) {
     }
 
     if (action === "reset_security") {
-      const res = await xboardFetch("/api/v1/user/resetSecurity", {
-        method: "POST",
+      let res = await xboardFetch("/api/v1/user/resetSecurity", {
+        method: "GET",
       });
+      if (res.error && res.status === 405) {
+        res = await xboardFetch("/api/v1/user/resetSecurity", {
+          method: "POST",
+        });
+      }
       return NextResponse.json(res.data || { error: res.error }, { status: res.status });
     }
 
@@ -412,10 +417,18 @@ export async function POST(request: Request) {
 
     // 6. Generate invite code
     if (action === "generate_invite") {
-      const res = await xboardFetch("/api/v1/user/invite/save", {
-        method: "POST",
+      let res = await xboardFetch("/api/v1/user/invite/save", {
+        method: "GET",
       });
-      return NextResponse.json(res.data || { error: res.error }, { status: res.status });
+      if (res.error && res.status === 405) {
+        res = await xboardFetch("/api/v1/user/invite/save", {
+          method: "POST",
+        });
+      }
+      if (res.error) {
+        return NextResponse.json({ error: res.error }, { status: res.status });
+      }
+      return NextResponse.json({ data: res.data ?? true, success: true }, { status: res.status });
     }
 
     // 7. Transfer commission to balance
