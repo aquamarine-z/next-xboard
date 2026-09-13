@@ -496,7 +496,7 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setDashboardTab("nodes")}
               className={cn(
-                "relative z-10 px-4 sm:px-5 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[125px] sm:min-w-[135px]",
+                "relative z-10 px-5 sm:px-6 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[150px] sm:min-w-[162px]",
                 dashboardTab === "nodes"
                   ? "text-foreground font-semibold"
                   : "text-muted-foreground hover:text-foreground"
@@ -510,7 +510,7 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setDashboardTab("traffic")}
               className={cn(
-                "relative z-10 px-4 sm:px-5 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[125px] sm:min-w-[135px]",
+                "relative z-10 px-5 sm:px-6 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[150px] sm:min-w-[162px]",
                 dashboardTab === "traffic"
                   ? "text-foreground font-semibold"
                   : "text-muted-foreground hover:text-foreground"
