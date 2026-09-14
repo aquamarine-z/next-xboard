@@ -158,7 +158,7 @@ export default function ShopPage() {
         </div>
 
         {/* Primary Segmented Dock: Plans vs Orders */}
-        <div className="relative inline-flex p-1 rounded-full liquid-glass-segment-dock select-none self-start sm:self-auto">
+        <div className="relative inline-flex rounded-full liquid-glass-segment-dock select-none self-start sm:self-auto">
           {/* Sliding Liquid Active Indicator Pill */}
           <div
             className="liquid-glass-segment-active"
@@ -202,7 +202,7 @@ export default function ShopPage() {
         availablePlans && availablePlans.length > 0 ? (
           <div key="shop-plans-container" className="space-y-4 animate-fade-in-gradient">
             {/* Cycle Switcher */}
-            <div className="relative inline-flex p-1 rounded-full liquid-glass-segment-dock select-none">
+            <div className="relative inline-flex rounded-full liquid-glass-segment-dock select-none">
               <div
                 className="liquid-glass-segment-active"
                 style={{
@@ -304,7 +304,7 @@ export default function ShopPage() {
         /* 2. My Orders View (Merged) */
         <div key="shop-orders-container" className="space-y-5 animate-fade-in-gradient">
           {/* iOS 26 Liquid Glass Segmented Dock for Order Filters */}
-          <div className="relative !grid grid-cols-4 p-1 rounded-full liquid-glass-segment-dock select-none self-start sm:self-auto">
+          <div className="relative !grid grid-cols-4 rounded-full liquid-glass-segment-dock select-none self-start sm:self-auto">
             {/* Sliding Liquid Active Indicator Pill */}
             <div
               className="liquid-glass-segment-active"

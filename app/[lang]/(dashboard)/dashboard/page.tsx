@@ -482,7 +482,7 @@ export default function DashboardPage() {
       <section id="nodes" className="space-y-4 pt-2 scroll-mt-20">
         {/* iOS 26 Liquid Glass Segmented Control */}
         <div className="flex items-center justify-between gap-3 flex-wrap px-1">
-          <div className="relative inline-flex p-1 rounded-full liquid-glass-segment-dock select-none">
+          <div className="relative inline-flex rounded-full liquid-glass-segment-dock select-none">
             {/* Sliding Liquid Active Indicator Pill */}
             <div
               className="liquid-glass-segment-active"
