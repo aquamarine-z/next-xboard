@@ -481,6 +481,7 @@
 
 [data-sonner-toaster] {
   pointer-events: none !important;
+  z-index: 99999 !important;
   font-family: var(--font-sf-pro), -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", "PingFang SC", "Segoe UI", Roboto, sans-serif !important;
 }
 
@@ -532,4 +533,11 @@
 
 [data-sonner-toaster][data-y-position='top'] {
   top: max(6.25rem, calc(env(safe-area-inset-top, 0px) + 5.5rem)) !important;
+}
+
+/* Mobile: Login page sonner pulled down to avoid iOS PWA status bar, Dynamic Island & frosted glass safe area */
+[data-sonner-toaster][data-y-position='top'].is-login-page,
+[data-sonner-toaster][data-y-position='top'][data-login-page='true'],
+body:has([data-page='login']) [data-sonner-toaster][data-y-position='top'] {
+  top: max(8.75rem, calc(env(safe-area-inset-top, 0px) + 7.75rem)) !important;
 }

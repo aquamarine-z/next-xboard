@@ -53,7 +53,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[85vh] flex flex-col items-center justify-center p-4 relative">
+    <div data-page="login" className="min-h-[85vh] flex flex-col items-center justify-center p-4 relative">
       <div className="absolute top-[max(1rem,calc(env(safe-area-inset-top,0px)+0.75rem))] right-4 sm:top-6 sm:right-6">
         <ThemeLanguageToggle />
       </div>

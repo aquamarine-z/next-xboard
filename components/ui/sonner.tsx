@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
+import { usePathname } from "next/navigation";
 import { Toaster as Sonner, toast as sonnerToast, type ToasterProps } from "sonner";
 import { Check, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -99,15 +100,18 @@ function useIsDesktop() {
 export function Toaster({ ...props }: ToasterProps) {
   const { theme = "system" } = useTheme();
   const isDesktop = useIsDesktop();
+  const pathname = usePathname();
+  const isLoginPage = Boolean(pathname && (pathname.endsWith("/login") || pathname.includes("/login")));
 
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
       position={isDesktop ? "bottom-right" : "top-center"}
-      offset={isDesktop ? 24 : 100}
+      offset={isDesktop ? 24 : isLoginPage ? 140 : 100}
       visibleToasts={3}
       expand={false}
-      className="toaster group"
+      className={cn("toaster group", isLoginPage && "is-login-page")}
+      data-login-page={isLoginPage ? "true" : undefined}
       {...props}
     />
   );
