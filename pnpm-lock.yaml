@@ -26,6 +26,9 @@ importers:
       cn:
         specifier: ^0.2.6
         version: 0.2.6
+      framer-motion:
+        specifier: ^14.0.0
+        version: 14.0.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       lucide-react:
         specifier: ^1.44.0
         version: 1.44.0(react@19.2.8)

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion, useMotionValue, useSpring, useTransform, animate } from "framer-motion";
+import { motion, useMotionValue, useSpring, useTransform, animate } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export interface AppleLiquidTabItem<T = string> {
