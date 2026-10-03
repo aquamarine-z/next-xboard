@@ -14,6 +14,8 @@ import {
   LogIn,
 } from "lucide-react";
 import { AppleCloudIcon, AppleAppBadge } from "@/components/ui/apple-icons";
+import { AppleLiquidTabs } from "@/components/ui/apple-liquid-tabs";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export function AppleHeader() {
@@ -71,7 +73,7 @@ export function AppleHeader() {
   const siteTitle = config?.title || config?.app_name || config?.app_description || t("common.app_name");
 
   return (
-    <header className="sticky top-0 z-40 w-full px-3 sm:px-6 pointer-events-none pwa-safe-top pb-2 transition-all duration-300">
+    <header className="sticky top-0 z-20 sm:z-30 w-full px-3 sm:px-6 pointer-events-none pwa-safe-top pb-2 transition-all duration-300">
       <div className="max-w-6xl w-full mx-auto h-[60px] sm:h-[64px] rounded-full pointer-events-auto liquid-glass-island border border-black/[0.08] dark:border-white/[0.14] px-4 sm:px-5.5 flex items-center justify-between gap-3 sm:gap-4 transition-all">
         {/* Left: Apple Brand Capsule & Status Indicator */}
         <div className="flex-1 flex items-center justify-start min-w-0">
@@ -95,47 +97,20 @@ export function AppleHeader() {
         </div>
 
         {/* Center: iOS 26 Segmented Capsule Dock Runner with Equal Width Tabs & Liquid Sliding Pill */}
-        <nav className="relative hidden md:grid grid-cols-4 p-1 rounded-full bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.05] dark:border-white/[0.08] backdrop-blur-md select-none shrink-0 md:w-[410px] lg:w-[440px]">
-          {/* Sliding Liquid Active Indicator Pill */}
-          {currentIndex >= 0 && (
-            <div
-              className="liquid-glass-active-pill"
-              style={{
-                top: "4px",
-                bottom: "4px",
-                left: "4px",
-                width: "calc((100% - 8px) / 4)",
-                transform: `translateX(calc(${currentIndex} * 100%))`,
-              }}
-            />
-          )}
-
-          {navItems.map((item, index) => {
-            const active = index === currentIndex;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                onClick={() => setOptimisticIndex(index)}
-                className={cn(
-                  "relative z-10 flex items-center justify-center gap-1.5 h-8 sm:h-[34px] rounded-full text-[12.5px] transition-colors duration-200 select-none cursor-pointer w-full ios26-press",
-                  active
-                    ? "text-[#0066cc] dark:text-[#2997ff] font-semibold"
-                    : "text-muted-foreground/80 hover:text-foreground font-medium"
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "w-3.5 h-3.5 transition-transform duration-200 shrink-0",
-                    active ? "stroke-[2.2] scale-105" : "stroke-[1.8] opacity-75"
-                  )}
-                />
-                <span className="truncate whitespace-nowrap">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="hidden md:flex items-center justify-center shrink-0 md:w-[410px] lg:w-[440px] overflow-visible py-2 -my-2">
+          <AppleLiquidTabs
+            size="md"
+            isRouteNav
+            value={navItems[activeIndex]?.id ?? navItems[0].id}
+            items={navItems.map((item) => ({
+              id: item.id,
+              label: item.label,
+              icon: item.icon,
+              href: item.href,
+            }))}
+            className="w-full"
+          />
+        </div>
 
         {/* Right: User Profile Pill / Login + Theme & Language Switcher */}
         <div className="flex-1 flex items-center justify-end gap-2 sm:gap-2.5 shrink-0">

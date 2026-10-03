@@ -32,7 +32,7 @@ function DropdownMenuContent({
   return (
     <MenuPrimitive.Portal>
       <MenuPrimitive.Positioner
-        className="isolate z-50 outline-none"
+        className="isolate z-[105] outline-none"
         align={align}
         alignOffset={alignOffset}
         side={side}
@@ -41,7 +41,7 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-[20px] sm:rounded-[22px] bg-white/85 dark:bg-[#1c1c1e]/85 p-1.5 text-popover-foreground border border-black/10 dark:border-white/12 shadow-[0_20px_45px_-6px_rgba(0,0,0,0.16),0_6px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_24px_50px_-6px_rgba(0,0,0,0.7)] backdrop-blur-3xl saturate-[190%] duration-200 outline-none data-[side=bottom]:slide-in-from-top-1.5 data-[side=inline-end]:slide-in-from-left-1.5 data-[side=inline-start]:slide-in-from-right-1.5 data-[side=left]:slide-in-from-right-1.5 data-[side=right]:slide-in-from-left-1.5 data-[side=top]:slide-in-from-bottom-1.5 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
+            "z-[105] max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-[20px] sm:rounded-[22px] bg-white/85 dark:bg-[#1c1c1e]/85 p-1.5 text-popover-foreground border border-black/10 dark:border-white/12 shadow-[0_20px_45px_-6px_rgba(0,0,0,0.16),0_6px_16px_rgba(0,0,0,0.06)] dark:shadow-[0_24px_50px_-6px_rgba(0,0,0,0.7)] backdrop-blur-3xl saturate-[190%] duration-200 outline-none data-[side=bottom]:slide-in-from-top-1.5 data-[side=inline-end]:slide-in-from-left-1.5 data-[side=inline-start]:slide-in-from-right-1.5 data-[side=left]:slide-in-from-right-1.5 data-[side=right]:slide-in-from-left-1.5 data-[side=top]:slide-in-from-bottom-1.5 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
             className
           )}
           {...props}

@@ -35,6 +35,7 @@ import { openQuickImportDialog, openNodeConnectDialog, openNoticeDialog } from "
 import { AppleCopyButton } from "@/components/ui/apple-copy-button";
 import { AppleCloudIcon, AppleAppBadge } from "@/components/ui/apple-icons";
 import { cn } from "@/lib/utils";
+import { AppleLiquidTabs } from "@/components/ui/apple-liquid-tabs";
 import type { XboardTrafficLog } from "@/types/xboard";
 
 export default function DashboardPage() {
@@ -176,6 +177,10 @@ export default function DashboardPage() {
   const totalTraffic = (user?.transfer_enable ?? subscribe?.transfer_enable) || 1;
   const remainingTraffic = Math.max(0, totalTraffic - usedTraffic);
   const trafficPercent = Math.min(100, Math.round((usedTraffic / totalTraffic) * 100));
+  const isTrafficUsed = Boolean(authenticated && user && usedTraffic > 0);
+  const progressPercent = isTrafficUsed
+    ? Math.min(100, Math.max(0.5, (usedTraffic / totalTraffic) * 100))
+    : 0;
 
   // Find real active plan name from backend plans if matching
   const currentPlan = (subscribe as any)?.plan || (user as any)?.plan || plans.find(
@@ -349,9 +354,12 @@ export default function DashboardPage() {
           {/* Segmented Liquid Progress Capsule */}
           <div className="w-full h-3 bg-secondary/80 dark:bg-white/[0.06] rounded-full overflow-hidden p-0.5 border border-border/70 shadow-inner">
             <div
-              className="h-full bg-gradient-to-r from-[#0071e3] to-[#2997ff] rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(0,113,227,0.35)]"
+              className={cn(
+                "h-full bg-gradient-to-r from-[#0071e3] to-[#2997ff] rounded-full transition-all duration-500 ease-out",
+                isTrafficUsed ? "shadow-[0_0_10px_rgba(0,113,227,0.35)] opacity-100" : "opacity-0"
+              )}
               style={{
-                width: `${authenticated && user ? Math.max(3, trafficPercent) : 0}%`,
+                width: `${progressPercent}%`,
               }}
             />
           </div>
@@ -482,44 +490,25 @@ export default function DashboardPage() {
       <section id="nodes" className="space-y-4 pt-2 scroll-mt-20">
         {/* iOS 26 Liquid Glass Segmented Control */}
         <div className="flex items-center justify-between gap-3 flex-wrap px-1">
-          <div className="relative inline-flex rounded-full liquid-glass-segment-dock select-none">
-            {/* Sliding Liquid Active Indicator Pill */}
-            <div
-              className="liquid-glass-segment-active"
-              style={{
-                width: "calc((100% - 7px) / 2)",
-                left: "3.5px",
-                transform: `translateX(${dashboardTab === "nodes" ? "0%" : "100%"})`,
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => setDashboardTab("nodes")}
-              className={cn(
-                "relative z-10 px-5 sm:px-6 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[150px] sm:min-w-[162px]",
-                dashboardTab === "nodes"
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Radio className={cn("w-3.5 h-3.5 transition-colors", dashboardTab === "nodes" ? "text-[#0071e3] dark:text-[#2997ff]" : "")} />
-              <span>{t("traffic.tab_nodes")}</span>
-              <span className="text-[10px] font-mono opacity-80">({servers.length})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setDashboardTab("traffic")}
-              className={cn(
-                "relative z-10 px-5 sm:px-6 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[150px] sm:min-w-[162px]",
-                dashboardTab === "traffic"
-                  ? "text-foreground font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Activity className={cn("w-3.5 h-3.5 transition-colors", dashboardTab === "traffic" ? "text-[#0071e3] dark:text-[#2997ff]" : "")} />
-              <span>{t("traffic.tab_traffic")}</span>
-            </button>
-          </div>
+          <AppleLiquidTabs<"nodes" | "traffic">
+            size="sm"
+            value={dashboardTab}
+            onChange={setDashboardTab}
+            items={[
+              {
+                id: "nodes",
+                label: t("traffic.tab_nodes"),
+                icon: Radio,
+                badge: `(${servers.length})`,
+              },
+              {
+                id: "traffic",
+                label: t("traffic.tab_traffic"),
+                icon: Activity,
+              },
+            ]}
+            className="min-w-[310px] sm:min-w-[340px]"
+          />
 
           {/* Search Bar on Nodes Tab */}
           {dashboardTab === "nodes" && servers && servers.length > 0 && (

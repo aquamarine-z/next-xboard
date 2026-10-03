@@ -24,6 +24,7 @@ import { AppleCopyButton } from "@/components/ui/apple-copy-button";
 import { formatDate } from "@/lib/format";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { AppleLiquidTabs } from "@/components/ui/apple-liquid-tabs";
 import type { XboardOrder, XboardPlan } from "@/types/xboard";
 
 export default function ShopPage() {
@@ -158,43 +159,16 @@ export default function ShopPage() {
         </div>
 
         {/* Primary Segmented Dock: Plans vs Orders */}
-        <div className="relative inline-flex rounded-full liquid-glass-segment-dock select-none self-start sm:self-auto">
-          {/* Sliding Liquid Active Indicator Pill */}
-          <div
-            className="liquid-glass-segment-active"
-            style={{
-              width: "calc((100% - 7px) / 2)",
-              left: "3.5px",
-              transform: `translateX(${shopTab === "plans" ? "0%" : "100%"})`,
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => setShopTab("plans")}
-            className={cn(
-              "relative z-10 px-5 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[110px] sm:min-w-[120px]",
-              shopTab === "plans"
-                ? "text-foreground font-semibold"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <ShoppingBag className={cn("w-3.5 h-3.5 transition-colors", shopTab === "plans" ? "text-[#0071e3] dark:text-[#2997ff]" : "")} />
-            <span>{t("orders.tab_plans")}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShopTab("orders")}
-            className={cn(
-              "relative z-10 px-5 py-1.5 rounded-full text-xs font-medium transition-all select-none cursor-pointer flex items-center justify-center gap-1.5 ios-touch-feedback min-w-[110px] sm:min-w-[120px]",
-              shopTab === "orders"
-                ? "text-foreground font-semibold"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Receipt className={cn("w-3.5 h-3.5 transition-colors", shopTab === "orders" ? "text-[#0071e3] dark:text-[#2997ff]" : "")} />
-            <span>{t("orders.tab_orders")}</span>
-          </button>
-        </div>
+        <AppleLiquidTabs<"plans" | "orders">
+          size="sm"
+          value={shopTab}
+          onChange={setShopTab}
+          items={[
+            { id: "plans", label: t("orders.tab_plans"), icon: ShoppingBag },
+            { id: "orders", label: t("orders.tab_orders"), icon: Receipt },
+          ]}
+          className="min-w-[220px] sm:min-w-[240px] self-start sm:self-auto"
+        />
       </div>
 
       {shopTab === "plans" ? (
@@ -202,32 +176,16 @@ export default function ShopPage() {
         availablePlans && availablePlans.length > 0 ? (
           <div key="shop-plans-container" className="space-y-4 animate-fade-in-gradient">
             {/* Cycle Switcher */}
-            <div className="relative inline-flex rounded-full liquid-glass-segment-dock select-none">
-              <div
-                className="liquid-glass-segment-active"
-                style={{
-                  width: "calc((100% - 7px) / 3)",
-                  left: "3.5px",
-                  transform: `translateX(${
-                    (selectedCycle === "month" ? 0 : selectedCycle === "quarter" ? 1 : 2) * 100
-                  }%)`,
-                }}
-              />
-              {(["month", "quarter", "year"] as const).map((cycle) => (
-                <button
-                  key={cycle}
-                  type="button"
-                  onClick={() => setSelectedCycle(cycle)}
-                  className={`relative z-10 px-4 sm:px-5 py-1.5 rounded-full text-xs font-medium transition-all ios-touch-feedback select-none cursor-pointer min-w-[70px] sm:min-w-[80px] text-center ${
-                    selectedCycle === cycle
-                      ? "text-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {t(`shop.cycle.${cycle}`)}
-                </button>
-              ))}
-            </div>
+            <AppleLiquidTabs<"month" | "quarter" | "year">
+              size="sm"
+              value={selectedCycle}
+              onChange={setSelectedCycle}
+              items={(["month", "quarter", "year"] as const).map((cycle) => ({
+                id: cycle,
+                label: t(`shop.cycle.${cycle}`),
+              }))}
+              className="min-w-[220px] sm:min-w-[250px]"
+            />
 
             {/* Real Plan Cards Grid */}
             <div key={`plans-grid-${selectedCycle}`} className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
@@ -304,37 +262,16 @@ export default function ShopPage() {
         /* 2. My Orders View (Merged) */
         <div key="shop-orders-container" className="space-y-5 animate-fade-in-gradient">
           {/* iOS 26 Liquid Glass Segmented Dock for Order Filters */}
-          <div className="relative !grid grid-cols-4 rounded-full liquid-glass-segment-dock select-none self-start sm:self-auto">
-            {/* Sliding Liquid Active Indicator Pill */}
-            <div
-              className="liquid-glass-segment-active"
-              style={{
-                width: "calc((100% - 7px) / 4)",
-                left: "3.5px",
-                transform: `translateX(${
-                  (orderFilter === "all" ? 0 : orderFilter === "pending" ? 1 : orderFilter === "completed" ? 2 : 3) * 100
-                }%)`,
-              }}
-            />
-            {(["all", "pending", "completed", "cancelled"] as const).map((filter) => {
-              const isSelected = orderFilter === filter;
-              return (
-                <button
-                  key={filter}
-                  type="button"
-                  onClick={() => setOrderFilter(filter)}
-                  className={cn(
-                    "relative z-10 px-3 sm:px-4 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 select-none cursor-pointer flex items-center justify-center text-center ios26-press min-w-[62px] sm:min-w-[76px]",
-                    isSelected
-                      ? "text-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {t(`orders.status_${filter}`)}
-                </button>
-              );
-            })}
-          </div>
+          <AppleLiquidTabs<"all" | "pending" | "completed" | "cancelled">
+            size="sm"
+            value={orderFilter}
+            onChange={setOrderFilter}
+            items={(["all", "pending", "completed", "cancelled"] as const).map((filter) => ({
+              id: filter,
+              label: t(`orders.status_${filter}`),
+            }))}
+            className="min-w-[280px] sm:min-w-[340px] self-start sm:self-auto"
+          />
 
           <div key={`orders-view-${orderFilter}`} className="space-y-4 animate-fade-in-gradient">
           {ordersLoading ? (
