@@ -858,13 +858,13 @@ export function AppleLiquidTabs<T extends string = string>({
             {/* -----------------------------------------------------------------
                 • 10.2.2 物理色散边缘 (Chromatic Dispersion Prismatic Fringe)
                 - 模拟不同波长光线折射率差引起的微弱彩虹色散光晕（蓝青色到暖橙色色散）
-                - 仅在触摸按下/拖拽活跃态渐变显露 (opacity: 0 -> 0.75)
+                - 仅在触摸按下/拖拽活跃态渐变显露 (轻柔通透色散，降低反光强度)
                 ----------------------------------------------------------------- */}
             <motion.div
-              className="absolute -inset-[0.5px] rounded-full pointer-events-none border border-sky-400/30 dark:border-sky-400/20 shadow-[0_0_6px_rgba(0,180,255,0.25)]"
+              className="absolute -inset-[0.5px] rounded-full pointer-events-none border border-sky-400/18 dark:border-sky-400/12 shadow-[0_0_4px_rgba(0,180,255,0.10)]"
               initial={false}
               animate={{
-                opacity: isActive ? 0.75 : 0,
+                opacity: isActive ? 0.35 : 0,
               }}
               transition={LIQUID_SPRING}
             />
