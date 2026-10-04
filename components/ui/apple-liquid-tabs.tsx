@@ -244,7 +244,7 @@ export function AppleLiquidTabs<T extends string = string>({
   const config = React.useMemo(() => {
     // 手机底部 Nav 专用的高透立体微渐变水珠样式（暗色空灵微透、亮色恰到好处的微烟熏质感，极致单层发丝细边）
     const dockDropletClass =
-      "bg-gradient-to-b from-black/[0.035] via-black/[0.042] to-black/[0.055] dark:from-white/[0.035] dark:via-white/[0.015] dark:to-transparent backdrop-blur-[16px] border border-black/[0.055] dark:border-white/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.4),inset_0_0.5px_0.5px_rgba(255,255,255,0.12)]";
+      "bg-gradient-to-b from-black/[0.035] via-black/[0.042] to-black/[0.055] dark:from-white/[0.035] dark:via-white/[0.015] dark:to-transparent backdrop-blur-[16px] border border-black/[0.055] dark:border-white/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.20)]";
 
     // 常规 Tab (Header / Dashboard / Shop) 保持原有高透微磨砂水珠样式
     const standardDropletClass =
@@ -263,7 +263,7 @@ export function AppleLiquidTabs<T extends string = string>({
           restingShadow: "shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]",
           dragShadow: "shadow-[0_24px_54px_-8px_rgba(0,0,0,0.20),0_10px_24px_-4px_rgba(0,0,0,0.12),inset_0_1.5px_1.5px_rgba(255,255,255,0.98)] dark:shadow-[0_32px_68px_-8px_rgba(0,0,0,0.90),0_12px_32px_rgba(0,0,0,0.75),inset_0_1.5px_1.5px_rgba(255,255,255,0.24)] border-black/[0.12] dark:border-white/[0.22]",
           restingDropletClass: isDock ? dockDropletClass : standardDropletClass,
-          restingSpecularClass: isDock ? "opacity-50" : "opacity-30",
+          restingSpecularClass: isDock ? "opacity-90" : "opacity-80",
           restingCausticClass: isDock ? "opacity-30" : "opacity-20",
         };
       case "md":
@@ -920,7 +920,7 @@ export function AppleLiquidTabs<T extends string = string>({
                 {/* 静止态顶部一体化无缝柔和反光 (从 top-0 顶缘严密贴合向下渐变，彻底消灭脱节黑色空隙) */}
                 <div
                   className={cn(
-                    "absolute inset-x-0 top-0 h-[22%] rounded-t-full bg-gradient-to-b from-white/50 via-white/15 to-transparent pointer-events-none dark:from-white/18 dark:via-white/[0.04] dark:to-transparent",
+                    "absolute inset-x-0 top-0 h-[28%] bg-gradient-to-b from-white/50 via-white/15 to-transparent pointer-events-none dark:from-white/30 dark:via-white/10 dark:to-transparent",
                     config.restingSpecularClass
                   )}
                 />
@@ -928,7 +928,7 @@ export function AppleLiquidTabs<T extends string = string>({
                 {/* 静止态底部一体化微弱漫反射 (从 bottom-0 底缘严密贴合向上渐变) */}
                 <div
                   className={cn(
-                    "absolute inset-x-0 bottom-0 h-[14%] rounded-b-full bg-gradient-to-t from-white/25 to-transparent pointer-events-none dark:from-white/[0.06] dark:to-transparent",
+                    "absolute inset-x-0 bottom-0 h-[14%] bg-gradient-to-t from-white/25 to-transparent pointer-events-none dark:from-white/[0.06] dark:to-transparent",
                     config.restingCausticClass
                   )}
                 />
@@ -947,17 +947,17 @@ export function AppleLiquidTabs<T extends string = string>({
                 }}
                 transition={LIQUID_SPRING}
               >
-                {/* 顶部弧面高光聚光带 (Curved Top Specular Arc) */}
-                <div className="absolute inset-x-2 top-0.5 h-[45%] rounded-full bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/30 dark:via-transparent opacity-100" />
+                {/* 顶部弧面高光聚光带 (Curved Top Specular Arc - 从 top-0 紧密无缝起始，彻底杜绝黑色缝隙) */}
+                <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/35 dark:via-transparent opacity-100" />
 
                 {/* 顶部极细高光折射峰线 (Crisp Top Specular Crest Line) */}
-                <div className="absolute top-[1px] inset-x-3.5 h-[1px] bg-gradient-to-r from-transparent via-white/90 dark:via-white/60 to-transparent pointer-events-none opacity-100" />
+                <div className="absolute top-0 inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-white/90 dark:via-white/60 to-transparent pointer-events-none opacity-100" />
 
                 {/* 底部焦散聚集弧 (Bottom Caustic Reflection Arc) */}
-                <div className="absolute bottom-0.5 inset-x-2.5 h-[32%] rounded-full bg-gradient-to-t from-white/40 via-transparent to-transparent pointer-events-none dark:from-white/15 opacity-100" />
+                <div className="absolute bottom-0 inset-x-0 h-[32%] bg-gradient-to-t from-white/40 via-transparent to-transparent pointer-events-none dark:from-white/15 opacity-100" />
 
                 {/* 底部极细边缘微光 (Crisp Bottom Rim Line) */}
-                <div className="absolute bottom-[1px] inset-x-4 h-[1px] bg-gradient-to-r from-transparent via-white/60 dark:via-white/30 to-transparent pointer-events-none opacity-100" />
+                <div className="absolute bottom-0 inset-x-3 h-[1px] bg-gradient-to-r from-transparent via-white/60 dark:via-white/30 to-transparent pointer-events-none opacity-100" />
               </motion.div>
             </div>
           </motion.div>

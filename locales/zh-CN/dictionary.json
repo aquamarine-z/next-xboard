@@ -227,7 +227,18 @@
     "not_logged_in_desc": "登录您的账户以查看和管理账户设置、安全密钥与订阅配置",
     "login_cta": "立即登录",
     "active_account": "正常运行中",
-    "status_label": "账户状态"
+    "status_label": "账户状态",
+    "about_title": "版本与系统更新",
+    "version_label": "应用版本",
+    "build_label": "构建代号",
+    "release_date_label": "发布日期",
+    "running_mode": "运行环境",
+    "mode_pwa": "PWA 原生独立模式",
+    "mode_browser": "Web 浏览器",
+    "check_update": "检查更新",
+    "checking_update": "正在检查...",
+    "update_latest": "当前已是最新版本 (v{version})",
+    "update_found": "检测到新版本，正在强制清除缓存并更新..."
   },
   "knowledge": {
     "title": "文档教程",

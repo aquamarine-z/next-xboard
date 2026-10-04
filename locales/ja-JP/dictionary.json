@@ -226,7 +226,18 @@
     "not_logged_in_desc": "ログインして設定やキーを管理してください",
     "login_cta": "ログイン",
     "active_account": "正常稼働中",
-    "status_label": "アカウント状態"
+    "status_label": "アカウント状態",
+    "about_title": "バージョンとシステム更新",
+    "version_label": "アプリバージョン",
+    "build_label": "ビルド番号",
+    "release_date_label": "リリース日",
+    "running_mode": "実行環境",
+    "mode_pwa": "PWA ネイティブアプリ",
+    "mode_browser": "Web ブラウザ",
+    "check_update": "アップデートを確認",
+    "checking_update": "確認中...",
+    "update_latest": "最新バージョンです (v{version})",
+    "update_found": "新しいバージョンが見つかりました。更新しています..."
   },
   "knowledge": {
     "title": "ガイド",

@@ -1,9 +1,9 @@
 // ==============================================================================
 // Aqua VPS - High-Performance Service Worker (PWA Instant Launch Engine)
-// Cache Version: v1-next-xboard
+// Cache Version: v2-next-xboard
 // ==============================================================================
 
-const CACHE_VERSION = 'v1-next-xboard';
+const CACHE_VERSION = 'v2-next-xboard';
 const STATIC_CACHE_NAME = `static-${CACHE_VERSION}`;
 const PAGES_CACHE_NAME = `pages-${CACHE_VERSION}`;
 
@@ -30,7 +30,15 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// 2. Activate Event: Clean up legacy caches & take immediate control
+// 2. Message Event: Support immediate SKIP_WAITING command from PWA Provider
+self.addEventListener('message', (event) => {
+  if (event.data && (event.data.type === 'SKIP_WAITING' || event.data === 'SKIP_WAITING')) {
+    console.log('[SW] Received SKIP_WAITING command, activating immediately...');
+    self.skipWaiting();
+  }
+});
+
+// 3. Activate Event: Clean up legacy caches & take immediate control
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {

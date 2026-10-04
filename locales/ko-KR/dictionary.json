@@ -226,7 +226,18 @@
     "not_logged_in_desc": "계정에 로그인하여 설정 및 구독 정보를 관리하세요",
     "login_cta": "로그인",
     "active_account": "정상 이용 중",
-    "status_label": "계정 상태"
+    "status_label": "계정 상태",
+    "about_title": "버전 및 시스템 업데이트",
+    "version_label": "앱 버전",
+    "build_label": "빌드 번호",
+    "release_date_label": "배포일",
+    "running_mode": "실행 환경",
+    "mode_pwa": "PWA 독립 실행형 앱",
+    "mode_browser": "웹 브라우저",
+    "check_update": "업데이트 확인",
+    "checking_update": "확인 중...",
+    "update_latest": "현재 최신 버전입니다 (v{version})",
+    "update_found": "새 버전이 발견되었습니다. 업데이트 중..."
   },
   "knowledge": {
     "title": "가이드",

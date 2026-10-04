@@ -3,10 +3,35 @@
 import * as React from "react";
 import { Share, PlusSquare, X, Download } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/context";
+import { APP_BUILD, APP_VERSION, type VersionInfo } from "@/lib/version";
+import { fetchServerVersion, hasNewVersion, forcePwaUpdate, isPwaStandalone } from "@/lib/pwa-update";
+import { toast } from "@/components/ui/sonner";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+interface PwaContextValue {
+  isStandalone: boolean;
+  isIOS: boolean;
+  appVersion: string;
+  appBuild: string;
+  checkForUpdate: () => Promise<boolean>;
+  isUpdating: boolean;
+}
+
+const PwaContext = React.createContext<PwaContextValue>({
+  isStandalone: true,
+  isIOS: false,
+  appVersion: APP_VERSION,
+  appBuild: APP_BUILD,
+  checkForUpdate: async () => false,
+  isUpdating: false,
+});
+
+export function usePwa() {
+  return React.useContext(PwaContext);
 }
 
 export function PwaProvider({ children }: { children: React.ReactNode }) {
@@ -15,11 +40,39 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
   const [isStandalone, setIsStandalone] = React.useState(true); // Default true to avoid flash
   const [isIOS, setIsIOS] = React.useState(false);
   const [showPrompt, setShowPrompt] = React.useState(false);
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  // Check server version and auto-force update if mismatched
+  const triggerAutoUpdate = React.useCallback(async (serverVersion: VersionInfo) => {
+    setIsUpdating(true);
+    toast.loading(
+      locale === "zh-CN"
+        ? `检测到系统新版本 (v${serverVersion.version})，正在无缝升级...`
+        : `New version detected (v${serverVersion.version}), upgrading...`,
+      { duration: 4000 }
+    );
+    await forcePwaUpdate(serverVersion.build);
+  }, [locale]);
+
+  const checkForUpdate = React.useCallback(async (): Promise<boolean> => {
+    const serverInfo = await fetchServerVersion();
+    if (!serverInfo) return false;
+
+    if (hasNewVersion(serverInfo.build, APP_BUILD)) {
+      await triggerAutoUpdate(serverInfo);
+      return true;
+    }
+    return false;
+  }, [triggerAutoUpdate]);
 
   React.useEffect(() => {
-    // 1. Register Service Worker
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      // Register sw.js
+    if (typeof window === "undefined") return;
+
+    // 1. Initial version check
+    checkForUpdate();
+
+    // 2. Register Service Worker with active update listeners
+    if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
           .register("/sw.js")
@@ -33,7 +86,8 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
                     installingWorker.state === "installed" &&
                     navigator.serviceWorker.controller
                   ) {
-                    console.log("[PWA] New content is available; please refresh.");
+                    console.log("[PWA] New service worker ready, updating...");
+                    checkForUpdate();
                   }
                 };
               }
@@ -43,50 +97,69 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
             console.warn("[PWA] ServiceWorker registration failed:", err);
           });
       });
-    }
 
-    // 2. Check Standalone status
-    if (typeof window !== "undefined") {
-      const isStandaloneMode =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as any).standalone === true ||
-        document.referrer.includes("android-app://");
-
-      setIsStandalone(isStandaloneMode);
-
-      const ua = window.navigator.userAgent.toLowerCase();
-      const isAppleMobile = /iphone|ipad|ipod/.test(ua);
-      setIsIOS(isAppleMobile);
-
-      // Check if user previously dismissed prompt within 7 days
-      const lastDismissed = localStorage.getItem("aqua_pwa_prompt_dismissed");
-      const isRecentlyDismissed =
-        lastDismissed && Date.now() - parseInt(lastDismissed, 10) < 7 * 24 * 60 * 60 * 1000;
-
-      // 3. Listen for Android Chrome beforeinstallprompt
-      const handleBeforeInstall = (e: Event) => {
-        e.preventDefault();
-        setDeferredPrompt(e as BeforeInstallPromptEvent);
-        if (!isStandaloneMode && !isRecentlyDismissed) {
-          setShowPrompt(true);
+      // Reload smoothly when new controller takes over
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
         }
-      };
-
-      window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-
-      // Show iOS prompt after slight delay if on iOS mobile browser
-      if (isAppleMobile && !isStandaloneMode && !isRecentlyDismissed) {
-        const timer = setTimeout(() => {
-          setShowPrompt(true);
-        }, 3500);
-        return () => clearTimeout(timer);
-      }
-
-      return () => {
-        window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
-      };
+      });
     }
-  }, []);
+
+    // 3. Foreground Wakeup Inspection (Crucial for iOS PWA WebClips)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkForUpdate();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // 4. Periodic polling every 10 minutes
+    const intervalTimer = setInterval(() => {
+      checkForUpdate();
+    }, 10 * 60 * 1000);
+
+    // 5. Standalone & Platform Detection
+    const standaloneMode = isPwaStandalone();
+    setIsStandalone(standaloneMode);
+
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isAppleMobile = /iphone|ipad|ipod/.test(ua);
+    setIsIOS(isAppleMobile);
+
+    // Check if user previously dismissed prompt within 7 days
+    const lastDismissed = localStorage.getItem("aqua_pwa_prompt_dismissed");
+    const isRecentlyDismissed =
+      lastDismissed && Date.now() - parseInt(lastDismissed, 10) < 7 * 24 * 60 * 60 * 1000;
+
+    // 6. Listen for Android Chrome beforeinstallprompt
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      if (!standaloneMode && !isRecentlyDismissed) {
+        setShowPrompt(true);
+      }
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+
+    // Show iOS prompt after slight delay if on iOS mobile browser
+    let promptTimer: NodeJS.Timeout | null = null;
+    if (isAppleMobile && !standaloneMode && !isRecentlyDismissed) {
+      promptTimer = setTimeout(() => {
+        setShowPrompt(true);
+      }, 3500);
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearInterval(intervalTimer);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      if (promptTimer) clearTimeout(promptTimer);
+    };
+  }, [checkForUpdate]);
 
   const handleDismiss = () => {
     setShowPrompt(false);
@@ -104,8 +177,20 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const contextValue = React.useMemo<PwaContextValue>(
+    () => ({
+      isStandalone,
+      isIOS,
+      appVersion: APP_VERSION,
+      appBuild: APP_BUILD,
+      checkForUpdate,
+      isUpdating,
+    }),
+    [isStandalone, isIOS, checkForUpdate, isUpdating]
+  );
+
   return (
-    <>
+    <PwaContext.Provider value={contextValue}>
       {children}
 
       {/* Floating iOS / Android Add to Home Screen Guidance Capsule */}
@@ -171,6 +256,6 @@ export function PwaProvider({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-    </>
+    </PwaContext.Provider>
   );
 }

@@ -227,7 +227,18 @@
     "not_logged_in_desc": "Sign in to manage your account credentials, security keys, and subscriptions",
     "login_cta": "Sign In Now",
     "active_account": "Active",
-    "status_label": "Status"
+    "status_label": "Status",
+    "about_title": "About & System Updates",
+    "version_label": "App Version",
+    "build_label": "Build",
+    "release_date_label": "Release Date",
+    "running_mode": "Runtime Environment",
+    "mode_pwa": "PWA Standalone App",
+    "mode_browser": "Web Browser",
+    "check_update": "Check for Updates",
+    "checking_update": "Checking...",
+    "update_latest": "Already up to date (v{version})",
+    "update_found": "New version found, clearing cache and updating..."
   },
   "knowledge": {
     "title": "Documentation",

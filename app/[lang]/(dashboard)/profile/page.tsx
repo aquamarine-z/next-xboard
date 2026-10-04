@@ -43,8 +43,12 @@ import {
   History,
   ChevronDown,
   ChevronUp,
+  Smartphone,
+  Globe,
 } from "lucide-react";
 import { AppleCloudIcon } from "@/components/ui/apple-icons";
+import { APP_VERSION, APP_BUILD, RELEASE_DATE } from "@/lib/version";
+import { fetchServerVersion, hasNewVersion, forcePwaUpdate, isPwaStandalone } from "@/lib/pwa-update";
 import type { XboardInviteCode, XboardInviteDetail } from "@/types/xboard";
 
 export default function ProfilePage() {
@@ -53,6 +57,7 @@ export default function ProfilePage() {
   const {
     authenticated,
     user,
+    config,
     subscribe,
     plans,
     fetchDashboardData,
@@ -60,6 +65,36 @@ export default function ProfilePage() {
     logout,
     tickets,
   } = useUserStore();
+
+  // Version and PWA update state
+  const [checkingUpdate, setCheckingUpdate] = React.useState(false);
+  const [isStandalone, setIsStandalone] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsStandalone(isPwaStandalone());
+  }, []);
+
+  const handleCheckUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      const serverInfo = await fetchServerVersion();
+      if (!serverInfo) {
+        toast.error(t("common.network_error"));
+        return;
+      }
+
+      if (hasNewVersion(serverInfo.build, APP_BUILD)) {
+        toast.info(t("profile.update_found"));
+        await forcePwaUpdate(serverInfo.build);
+      } else {
+        toast.success(t("profile.update_latest", { version: APP_VERSION }));
+      }
+    } catch {
+      toast.error(t("common.network_error"));
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
 
   // Notification switches local state
   const [remindExpire, setRemindExpire] = React.useState(false);
@@ -902,7 +937,101 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* 9. Inset Group 7: 退出登录 (Sign Out Action) */}
+          {/* 9. Inset Group 7: 版本与系统更新 (Version & System Updates) */}
+          <div className="space-y-2.5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1 select-none">
+              {t("profile.about_title")}
+            </span>
+            <div className="rounded-[20px] border border-border bg-card overflow-hidden shadow-xs divide-y divide-border/60">
+              {/* App Version & Build */}
+              <div className="py-4 px-5 sm:py-4.5 sm:px-6 flex items-center justify-between gap-4 select-none">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="w-10 h-10 rounded-[12px] bg-black text-white dark:bg-white/10 dark:text-foreground flex items-center justify-center shrink-0 shadow-xs overflow-hidden border border-border/50">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/icons/icon-192x192.png"
+                      alt="Aqua VPS"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex flex-col justify-center gap-0.5">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[13.5px] font-semibold text-foreground">
+                        {config?.title || "Aqua VPS"}
+                      </p>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                        v{APP_VERSION}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      Build {APP_BUILD}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCheckUpdate}
+                  disabled={checkingUpdate}
+                  className="apple-pill-btn text-xs bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center gap-1.5 py-1 px-3.5 select-none h-7.5 shrink-0 transition-all cursor-pointer shadow-xs shadow-[#0066cc]/25 font-medium disabled:opacity-60"
+                >
+                  <RefreshCw className={cn("w-3 h-3 text-white", checkingUpdate && "animate-spin")} />
+                  <span>
+                    {checkingUpdate ? t("profile.checking_update") : t("profile.check_update")}
+                  </span>
+                </button>
+              </div>
+
+              {/* Running Mode (PWA Standalone vs Browser) */}
+              <div className="py-3.5 px-5 sm:py-4 sm:px-6 flex items-center justify-between gap-4 select-none">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-8 h-8 rounded-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Smartphone className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground">
+                      {t("profile.running_mode")}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  {isStandalone ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11.5px] font-medium">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {t("profile.mode_pwa")}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/10 text-muted-foreground text-[11.5px] font-medium">
+                      <Globe className="w-3.5 h-3.5" />
+                      {t("profile.mode_browser")}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Release Date */}
+              <div className="py-3.5 px-5 sm:py-4 sm:px-6 flex items-center justify-between gap-4 select-none">
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-8 h-8 rounded-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground">
+                      {t("profile.release_date_label")}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground font-mono">
+                  {RELEASE_DATE}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 10. Inset Group 8: 退出登录 (Sign Out Action) */}
           <div className="pt-2">
             <button
               type="button"
