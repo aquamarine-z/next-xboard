@@ -103,7 +103,7 @@ export function AppleCopyButton({
   // 2. PILL MODE: Standard Apple pill button with background, border & iOS 26 System Green
   const pillSizeClasses =
     size === "sm"
-      ? (showText ? "h-7 min-w-[84px] sm:min-w-[88px] px-3 sm:px-3.5 text-[11px] font-medium" : "h-7 w-7 p-0 text-[11px] font-medium shrink-0")
+      ? (showText ? "h-7 w-[84px] px-2.5 text-[11px] font-medium shrink-0" : "h-7 w-7 p-0 text-[11px] font-medium shrink-0")
       : (showText ? "h-10 min-w-24 px-3.5 text-xs font-medium" : "h-10 w-10 p-0 text-xs font-medium shrink-0");
 
   // iOS 26 Apple Liquid Glass Green styling:

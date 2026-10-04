@@ -423,7 +423,7 @@ export default function ProfilePage() {
                   copiedText={t("common.copied")}
                   size="sm"
                   variant="secondary"
-                  className="px-3 sm:px-3.5 h-7 shrink-0 text-[11px] select-none"
+                  className="w-[84px] h-7 shrink-0 text-[11px] select-none"
                 />
               </div>
 
@@ -446,10 +446,10 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleChangePassword}
-                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-7 shrink-0 text-[11px] font-medium border border-border/80 bg-secondary/50 text-[#48484a] dark:text-[#d1d1d6] hover:text-foreground hover:bg-secondary select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer"
+                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 w-[84px] h-7 shrink-0 text-[11px] font-medium border border-border/80 bg-secondary/50 text-[#48484a] dark:text-[#d1d1d6] hover:text-foreground hover:bg-secondary select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer"
                 >
-                  <KeyRound className="w-3.5 h-3.5 select-none" />
-                  <span className="select-none">{t("profile.change_password")}</span>
+                  <KeyRound className="w-3.5 h-3.5 select-none shrink-0" />
+                  <span className="select-none whitespace-nowrap">{t("profile.change_password")}</span>
                 </button>
               </div>
 
@@ -472,10 +472,10 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleResetSecret}
-                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-7 shrink-0 text-[11px] font-medium border border-destructive/25 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer"
+                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 w-[84px] h-7 shrink-0 text-[11px] font-medium border border-destructive/25 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer"
                 >
-                  <RefreshCw className="w-3.5 h-3.5 select-none" />
-                  <span className="select-none">{t("profile.reset_security_btn")}</span>
+                  <RefreshCw className="w-3.5 h-3.5 select-none shrink-0" />
+                  <span className="select-none whitespace-nowrap">{t("profile.reset_security_btn")}</span>
                 </button>
               </div>
             </div>
@@ -976,10 +976,10 @@ export default function ProfilePage() {
                   type="button"
                   onClick={handleCheckUpdate}
                   disabled={checkingUpdate}
-                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-7 shrink-0 text-[11px] font-medium border border-border/80 bg-secondary/50 text-[#48484a] dark:text-[#d1d1d6] hover:text-foreground hover:bg-secondary select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer disabled:opacity-50"
+                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 w-[84px] h-7 shrink-0 text-[11px] font-medium border border-border/80 bg-secondary/50 text-[#48484a] dark:text-[#d1d1d6] hover:text-foreground hover:bg-secondary select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer disabled:opacity-50"
                 >
-                  <RefreshCw className={cn("w-3.5 h-3.5 select-none", checkingUpdate && "animate-spin")} />
-                  <span className="select-none">
+                  <RefreshCw className={cn("w-3.5 h-3.5 select-none shrink-0", checkingUpdate && "animate-spin")} />
+                  <span className="select-none whitespace-nowrap">
                     {checkingUpdate ? t("profile.checking_update") : t("profile.check_update")}
                   </span>
                 </button>
