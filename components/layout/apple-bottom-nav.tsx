@@ -52,7 +52,9 @@ export function AppleBottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] left-4 right-4 max-w-[390px] mx-auto z-20 sm:z-30 select-none touch-none overflow-visible py-2 -my-2"
+      className="md:hidden fixed bottom-[max(0.85rem,env(safe-area-inset-bottom))] left-4 right-4 max-w-[390px] mx-auto z-20 sm:z-30 select-none touch-none overflow-visible py-2 -my-2 [-webkit-touch-callout:none]"
+      style={{ WebkitTouchCallout: "none" }}
+      onContextMenu={(e) => e.preventDefault()}
       aria-label="Mobile Navigation Bar"
     >
       <AppleLiquidTabs

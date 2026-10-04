@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useSpring, useTransform, animate } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -74,6 +73,19 @@ export function AppleLiquidTabs<T extends string = string>({
   React.useEffect(() => {
     setOptimisticIndex(null);
   }, [value]);
+
+  // Prefetch navigation routes in the background for instant native app feel
+  React.useEffect(() => {
+    if (isRouteNav) {
+      items.forEach((item) => {
+        if (item.href) {
+          try {
+            router.prefetch(item.href);
+          } catch {}
+        }
+      });
+    }
+  }, [isRouteNav, items, router]);
 
   // Active interaction state:
   // Enters active state (grows larger than bar, high-transparency 3D water droplet)
@@ -439,15 +451,21 @@ export function AppleLiquidTabs<T extends string = string>({
         onPointerLeave={() => {
           setIsPressed(false);
         }}
+        onContextMenu={(e) => e.preventDefault()}
         onDragStart={(e) => e.preventDefault()}
         animate={{
           scale: elevateOnDrag && isActive ? config.elevationScale : 1,
           y: elevateOnDrag && isActive ? config.elevationY : 0,
         }}
         transition={LIQUID_SPRING}
-        style={{ transformOrigin: "center center" }}
+        style={{
+          transformOrigin: "center center",
+          WebkitTouchCallout: "none",
+          WebkitUserSelect: "none",
+          userSelect: "none",
+        }}
         className={cn(
-          "relative rounded-full select-none will-change-transform touch-none border overflow-visible transition-[box-shadow,border-color] duration-200",
+          "relative rounded-full select-none will-change-transform touch-none border overflow-visible transition-[box-shadow,border-color] duration-200 [-webkit-touch-callout:none]",
           config.containerClass,
           elevateOnDrag && isActive
             ? cn("cursor-grabbing", config.dragShadow)
@@ -573,29 +591,19 @@ export function AppleLiquidTabs<T extends string = string>({
                 </div>
               );
 
-              if (isRouteNav && item.href) {
-                return (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    draggable={false}
-                    onDragStart={(e) => e.preventDefault()}
-                    onClick={(e) => handleTabClick(e, index, item)}
-                    className="flex items-center justify-center w-full h-full rounded-full cursor-pointer select-none"
-                  >
-                    {content}
-                  </Link>
-                );
-              }
-
               return (
                 <button
                   key={item.id}
                   type="button"
+                  role="tab"
+                  aria-selected={item.id === activeId}
+                  tabIndex={0}
                   draggable={false}
                   onDragStart={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   onClick={(e) => handleTabClick(e, index, item)}
-                  className="flex items-center justify-center w-full h-full rounded-full cursor-pointer select-none"
+                  className="flex items-center justify-center w-full h-full rounded-full cursor-pointer select-none outline-none [-webkit-touch-callout:none]"
+                  style={{ WebkitTouchCallout: "none" }}
                 >
                   {content}
                 </button>
