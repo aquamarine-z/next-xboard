@@ -388,29 +388,29 @@ export function AppleLiquidTabs<T extends string = string>({
   /**
    * 🕳️【裁剪层 2】clipPathInactive: 底层灰色文字的圆角胶囊反向打孔 (Capsule Donut Hole)
    * -------------------------------------------------------------------------
-   * • 视觉架构：完美保留原版双层高透水珠光学透镜架构 (Layer 1 底层灰色 + Layer 2 顶层蓝色 1.25x 放大)。
-   * • 根治发丝白线 (Seam Root Cause Fix):
-   *   1. 静止态优化：在非拖拽静止常态下，底层当前激活项已通过 !isActive && isItemActive 具备 opacity-0，
-   *      此时直接返回 "none"，彻底避免 iOS WebKit 在静止态及点按各页面时产生任何亚像素发丝断层。
-   *   2. 活跃拖拽态单连通外缘切槽 (Perimeter-Walk Contour):
-   *      淘汰产生横切贯穿线桥的 (0% 0% -> cxLeft yTop) 跨层跳跃，改用沿顶缘自然行进的单连通环绕闭合。
-   *      将纵向切缝完全隐藏于水珠胶囊实体内部，彻底消灭横切整个底栏的白线！
+   * • 空间互斥定律：Layer 1 (全景 minus 透镜) + Layer 2 (透镜) ≡ 完整导航栏。
+   * • 零重叠保证：始终与 springPillX 严格同步，在水珠所在位置物理打出一个 100% 通透的中空圆角胶囊切口。
+   *   底层灰色字在水珠窗口内 100% 物理剔除，绝对杜绝双重重影重叠！
+   * • 根治发丝白线 (Zero-Seam Contour):
+   *   淘汰产生跨屏横切桥线的旧算法，改用沿顶缘自然行进的逆时针闭合轮廓：
+   *   (0% 0%) -> (cxLeft, 0%) -> (cxLeft, yTop) -> [逆时针环绕胶囊] -> (cxLeft, yTop) -> (cxLeft, 0%) -> (100% 0%) -> (100% 100%) -> (0% 100%) -> (0% 0%)
+   *   进出切缝完全重叠为竖向缝线，且 100% 隐匿于水珠胶囊实体的高光与毛玻璃下方，消除横截底栏的白线！
    */
   const clipPathInactive = useTransform(
     [springPillX, scaleX],
     ([latestX, latestScaleX]: number[]) => {
-      if (!isActive) {
-        return "none";
-      }
+      const leftP = (currentActiveIndex * 100) / items.length;
+      const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
+      const rightSideP = 100 - rightP;
 
       if (!isMounted || !innerRef.current) {
-        return "none";
+        return `polygon(evenodd, 0% 0%, ${leftP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%)`;
       }
 
       const w = innerRef.current.offsetWidth;
       const h = innerRef.current.offsetHeight;
       if (w <= 0 || h <= 0) {
-        return "none";
+        return `polygon(evenodd, 0% 0%, ${leftP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%)`;
       }
 
       const tabWidth = items.length > 0 ? w / items.length : 0;
@@ -419,10 +419,10 @@ export function AppleLiquidTabs<T extends string = string>({
       const left = Math.max(0, center - currentWidth / 2);
       const right = Math.min(w, center + currentWidth / 2);
 
-      // 提取水珠垂直物理边界（严格限制在视口有效高度内）
-      const topOffset = Math.max(0, isActive ? config.activeOverhang : config.restingInset);
-      const yTop = Math.max(0, topOffset);
-      const yBottom = Math.min(h, h - topOffset);
+      // 提取水珠垂直物理边界
+      const topOffset = isActive ? config.activeOverhang : config.restingInset;
+      const yTop = topOffset;
+      const yBottom = h - topOffset;
       const pillHeight = Math.max(1, yBottom - yTop);
       const centerY = h / 2;
 
@@ -431,45 +431,45 @@ export function AppleLiquidTabs<T extends string = string>({
       const cxLeft = left + r;
       const cxRight = Math.max(cxLeft, right - r);
 
-      // 沿顶缘外轮廓单连通自然切槽，杜绝产生跨越屏幕的横截缝线
+      // 沿顶缘外轮廓单连通自然切槽：外圈顺时针，内圈胶囊逆时针环绕
       const points: string[] = [
         "0% 0%",
-        `${cxLeft.toFixed(2)}px 0%`,
+        `${cxLeft.toFixed(2)}px 0px`,
         `${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`,
-        `${cxRight.toFixed(2)}px ${yTop.toFixed(2)}px`,
       ];
 
-      // 右半圆弧采样 (9 个平滑分段)
+      // 1. 左半圆弧逆时针采样 (Counter-Clockwise: 从顶部 -PI/2 经左侧 -PI 向下至底部 -3*PI/2)
       const N = 9;
       for (let i = 1; i <= N; i++) {
-        const theta = -Math.PI / 2 + (Math.PI * i) / N;
-        const x = cxRight + r * Math.cos(theta);
-        const y = centerY + r * Math.sin(theta);
-        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
-      }
-
-      // 底部水平切线
-      points.push(`${cxLeft.toFixed(2)}px ${yBottom.toFixed(2)}px`);
-
-      // 左半圆弧采样 (9 个平滑分段)
-      for (let i = 1; i <= N; i++) {
-        const theta = Math.PI / 2 + (Math.PI * i) / N;
+        const theta = -Math.PI / 2 - (Math.PI * i) / N;
         const x = cxLeft + r * Math.cos(theta);
         const y = centerY + r * Math.sin(theta);
         points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
       }
 
-      // 回到胶囊顶切点并垂直归位顶部外缘
-      points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
-      points.push(`${cxLeft.toFixed(2)}px 0%`);
+      // 2. 底部水平切线向右至右半圆切点
+      points.push(`${cxRight.toFixed(2)}px ${yBottom.toFixed(2)}px`);
 
-      // 外周右侧与底侧闭合
-      points.push("100% 0%");
+      // 3. 右半圆弧逆时针采样 (Counter-Clockwise: 从底部 PI/2 经右侧 0 向上至顶部 -PI/2)
+      for (let i = 1; i <= N; i++) {
+        const theta = Math.PI / 2 - (Math.PI * i) / N;
+        const x = cxRight + r * Math.cos(theta);
+        const y = centerY + r * Math.sin(theta);
+        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
+      }
+
+      // 4. 顶部水平切线向左回归 cxLeft 切点
+      points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
+      // 垂直回归顶边缘
+      points.push(`${cxLeft.toFixed(2)}px 0px`);
+
+      // 5. 外圈右侧与底侧闭合
+      points.push("100% 0px");
       points.push("100% 100%");
       points.push("0% 100%");
-      points.push("0% 0%");
+      points.push("0% 0px");
 
-      return `polygon(${points.join(", ")})`;
+      return `polygon(evenodd, ${points.join(", ")})`;
     }
   );
 
@@ -1006,8 +1006,7 @@ export function AppleLiquidTabs<T extends string = string>({
                         "flex items-center justify-center transition-colors select-none font-medium text-muted-foreground hover:text-foreground",
                         orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
                         config.itemClass,
-                        tabClassName,
-                        !isActive && isItemActive && "opacity-0 pointer-events-none"
+                        tabClassName
                       )}
                     >
                       {Icon && (
