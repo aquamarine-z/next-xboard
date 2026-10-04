@@ -131,138 +131,6 @@ const LIQUID_SPRING = {
  *    两者在像素空间上严格互斥、零重叠、零间隙，完全杜绝重影，达到真·光学放大镜质感！
  * =========================================================================================
  */
-
-interface AppleLiquidTabSlotProps<T extends string = string> {
-  item: AppleLiquidTabItem<T>;
-  index: number;
-  totalItems: number;
-  springPillX: MotionValue<number>;
-  innerRef: React.RefObject<HTMLDivElement | null>;
-  currentActiveIndex: number;
-  activeId: T;
-  isActive: boolean;
-  isResting: boolean;
-  orientation: "horizontal" | "vertical";
-  activeColor: string;
-  itemClass: string;
-  iconClass: string;
-  tabClassName?: string;
-  onTabClick: (e: React.MouseEvent, index: number, item: AppleLiquidTabItem<T>) => void;
-}
-
-function AppleLiquidTabSlot<T extends string = string>({
-  item,
-  index,
-  totalItems,
-  springPillX,
-  innerRef,
-  currentActiveIndex,
-  activeId,
-  isActive,
-  isResting,
-  orientation,
-  activeColor,
-  itemClass,
-  iconClass,
-  tabClassName,
-  onTabClick,
-}: AppleLiquidTabSlotProps<T>) {
-  const Icon = item.icon;
-  const isItemActive = index === currentActiveIndex;
-
-  // 动态光学透镜高亮过渡 (Smooth Optical Lens Progress via springPillX)
-  // 当水珠正对此 Tab 时 progress = 1 (100% 蓝色透镜)，远离时 progress = 0 (100% 灰色底字)
-  const itemProgress = useTransform(springPillX, (currentX) => {
-    if (isResting) {
-      return index === currentActiveIndex ? 1 : 0;
-    }
-    if (!innerRef.current) return index === currentActiveIndex ? 1 : 0;
-    const w = innerRef.current.offsetWidth;
-    if (w <= 0 || totalItems <= 0) return index === currentActiveIndex ? 1 : 0;
-    const tabWidth = w / totalItems;
-    const itemCenterX = (index + 0.5) * tabWidth;
-    const dropletCenterX = currentX + tabWidth / 2;
-    const dist = Math.abs(dropletCenterX - itemCenterX);
-    const thresholdFull = tabWidth * 0.35;
-    const thresholdZero = tabWidth * 0.75;
-    if (dist <= thresholdFull) return 1;
-    if (dist >= thresholdZero) return 0;
-    return 1 - (dist - thresholdFull) / (thresholdZero - thresholdFull);
-  });
-
-  const activeOpacity = itemProgress;
-  const inactiveOpacity = useTransform(itemProgress, (p) => 1 - p);
-
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={item.id === activeId}
-      tabIndex={0}
-      draggable={false}
-      onDragStart={(e) => e.preventDefault()}
-      onContextMenu={(e) => e.preventDefault()}
-      onClick={(e) => onTabClick(e, index, item)}
-      className="relative flex items-center justify-center w-full h-full rounded-full cursor-pointer select-none outline-none [-webkit-touch-callout:none]"
-      style={{ WebkitTouchCallout: "none" }}
-    >
-      {/* 常态未激活灰色文字层 (Base Inactive Layer) - 随水珠滑入平滑淡出，滑出淡入，无任何 clip-path 裁切 */}
-      <motion.div
-        style={{ opacity: isResting ? (isItemActive ? 0 : 1) : inactiveOpacity }}
-        className={cn(
-          "flex items-center justify-center transition-colors select-none font-medium text-muted-foreground hover:text-foreground pointer-events-none",
-          orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
-          itemClass,
-          tabClassName
-        )}
-      >
-        {Icon && (
-          <Icon className={cn(iconClass, "transition-transform shrink-0 stroke-[1.8] opacity-80")} />
-        )}
-        <span className="truncate whitespace-nowrap">{item.label}</span>
-        {item.badge && (
-          <span className="text-[10px] font-mono opacity-80 shrink-0">{item.badge}</span>
-        )}
-      </motion.div>
-
-      {/* 高亮蓝色透镜显露层 (Active Lens Highlight Layer) - 触摸/拖拽时随水珠浮起放大，完全同构对齐 */}
-      <motion.div
-        style={{ opacity: isResting ? (isItemActive ? 1 : 0) : activeOpacity }}
-        animate={{
-          scale: isItemActive && isActive ? 1.25 : 1.0,
-          y: isItemActive && isActive ? -2 : 0,
-        }}
-        transition={LIQUID_SPRING}
-        className={cn(
-          "absolute inset-0 flex items-center justify-center font-semibold select-none origin-center pointer-events-none will-change-transform",
-          activeColor,
-          orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
-          itemClass,
-          tabClassName
-        )}
-      >
-        {Icon && (
-          <Icon
-            className={cn(
-              iconClass,
-              "shrink-0 stroke-[2.2] transition-transform",
-              "drop-shadow-[0_1px_5px_rgba(0,113,227,0.45)] dark:drop-shadow-[0_1px_8px_rgba(41,151,255,0.65)]"
-            )}
-          />
-        )}
-        <span className="truncate whitespace-nowrap tracking-tight text-[12px] sm:text-[13px] drop-shadow-[0_1px_4px_rgba(0,113,227,0.30)] dark:drop-shadow-[0_1px_5px_rgba(41,151,255,0.45)]">
-          {item.label}
-        </span>
-        {item.badge && (
-          <span className="text-[10px] font-mono shrink-0 opacity-95">
-            {item.badge}
-          </span>
-        )}
-      </motion.div>
-    </button>
-  );
-}
-
 export function AppleLiquidTabs<T extends string = string>({
   items,
   value,
@@ -474,17 +342,136 @@ export function AppleLiquidTabs<T extends string = string>({
   }, [items.length]);
 
   const [isMounted, setIsMounted] = React.useState(false);
-  const [isResting, setIsResting] = React.useState(true);
-  const restingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const prevActiveIndexRef = React.useRef(currentActiveIndex);
 
-  React.useEffect(() => {
-    return () => {
-      if (restingTimeoutRef.current) {
-        clearTimeout(restingTimeoutRef.current);
+  /* -------------------------------------------------------------------------
+   * • 08. 光学互斥遮罩矩阵 (Optical Complementary Masking System)
+   * ------------------------------------------------------------------------- */
+
+  /**
+   * 🔍【裁剪层 1】clipPathActive: 顶层高亮蓝色文字的正向透镜显露窗口
+   * -------------------------------------------------------------------------
+   * • 核心作用：只让水珠透镜内部的圆角胶囊区域显露，外部区域 100% 裁剪隐藏。
+   * • 几何对齐：边界 top/bottom 严格取 topOffset，与物理水珠 pillRef 及底层打孔完全同构。
+   * • 亚像素补偿：左右各施加 0.75px 膨胀缓冲 (Dilation Buffer)，杜绝 GPU 抗锯齿接缝漏底。
+   */
+  const clipPathActive = useTransform(
+    [springPillX, scaleX],
+    ([latestX, latestScaleX]: number[]) => {
+      const topOffset = isActive ? config.activeOverhang : config.restingInset;
+      const leftP = (currentActiveIndex * 100) / items.length;
+      const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
+
+      if (!isMounted || !innerRef.current) {
+        return `inset(${topOffset.toFixed(2)}px ${rightP.toFixed(2)}% ${topOffset.toFixed(2)}px ${leftP.toFixed(2)}% round 9999px)`;
       }
-    };
-  }, []);
+
+      const w = innerRef.current.offsetWidth;
+      if (w <= 0) {
+        return `inset(${topOffset.toFixed(2)}px ${rightP.toFixed(2)}% ${topOffset.toFixed(2)}px ${leftP.toFixed(2)}% round 9999px)`;
+      }
+
+      const tabWidth = items.length > 0 ? w / items.length : 0;
+      const center = (latestX ?? 0) + tabWidth / 2;
+      const currentWidth = tabWidth * (latestScaleX ?? 1);
+      const left = Math.max(0, center - currentWidth / 2);
+      const right = Math.min(w, center + currentWidth / 2);
+
+      // 施加 0.75px 亚像素膨胀缓冲，紧密咬合底层多边形切口，杜绝发丝细缝
+      const activeLeft = Math.max(0, left - 0.75);
+      const activeRight = Math.min(w, right + 0.75);
+
+      return `inset(${topOffset.toFixed(2)}px ${(w - activeRight).toFixed(2)}px ${topOffset.toFixed(2)}px ${activeLeft.toFixed(2)}px round 9999px)`;
+    }
+  );
+
+  /**
+   * 🕳️【裁剪层 2】clipPathInactive: 底层灰色文字的圆角胶囊反向打孔 (Capsule Donut Hole)
+   * -------------------------------------------------------------------------
+   * • 视觉架构：完美保留原版双层高透水珠光学透镜架构 (Layer 1 底层灰色 + Layer 2 顶层蓝色 1.25x 放大)。
+   * • 根治发丝白线 (Seam Root Cause Fix):
+   *   1. 静止态优化：在非拖拽静止常态下，底层当前激活项已通过 !isActive && isItemActive 具备 opacity-0，
+   *      此时直接返回 "none"，彻底避免 iOS WebKit 在静止态及点按各页面时产生任何亚像素发丝断层。
+   *   2. 活跃拖拽态单连通外缘切槽 (Perimeter-Walk Contour):
+   *      淘汰产生横切贯穿线桥的 (0% 0% -> cxLeft yTop) 跨层跳跃，改用沿顶缘自然行进的单连通环绕闭合。
+   *      将纵向切缝完全隐藏于水珠胶囊实体内部，彻底消灭横切整个底栏的白线！
+   */
+  const clipPathInactive = useTransform(
+    [springPillX, scaleX],
+    ([latestX, latestScaleX]: number[]) => {
+      if (!isActive) {
+        return "none";
+      }
+
+      if (!isMounted || !innerRef.current) {
+        return "none";
+      }
+
+      const w = innerRef.current.offsetWidth;
+      const h = innerRef.current.offsetHeight;
+      if (w <= 0 || h <= 0) {
+        return "none";
+      }
+
+      const tabWidth = items.length > 0 ? w / items.length : 0;
+      const center = (latestX ?? 0) + tabWidth / 2;
+      const currentWidth = tabWidth * (latestScaleX ?? 1);
+      const left = Math.max(0, center - currentWidth / 2);
+      const right = Math.min(w, center + currentWidth / 2);
+
+      // 提取水珠垂直物理边界（严格限制在视口有效高度内）
+      const topOffset = Math.max(0, isActive ? config.activeOverhang : config.restingInset);
+      const yTop = Math.max(0, topOffset);
+      const yBottom = Math.min(h, h - topOffset);
+      const pillHeight = Math.max(1, yBottom - yTop);
+      const centerY = h / 2;
+
+      // 计算胶囊半圆半径与左右圆心
+      const r = Math.min(pillHeight / 2, Math.max(0, (right - left) / 2));
+      const cxLeft = left + r;
+      const cxRight = Math.max(cxLeft, right - r);
+
+      // 沿顶缘外轮廓单连通自然切槽，杜绝产生跨越屏幕的横截缝线
+      const points: string[] = [
+        "0% 0%",
+        `${cxLeft.toFixed(2)}px 0%`,
+        `${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`,
+        `${cxRight.toFixed(2)}px ${yTop.toFixed(2)}px`,
+      ];
+
+      // 右半圆弧采样 (9 个平滑分段)
+      const N = 9;
+      for (let i = 1; i <= N; i++) {
+        const theta = -Math.PI / 2 + (Math.PI * i) / N;
+        const x = cxRight + r * Math.cos(theta);
+        const y = centerY + r * Math.sin(theta);
+        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
+      }
+
+      // 底部水平切线
+      points.push(`${cxLeft.toFixed(2)}px ${yBottom.toFixed(2)}px`);
+
+      // 左半圆弧采样 (9 个平滑分段)
+      for (let i = 1; i <= N; i++) {
+        const theta = Math.PI / 2 + (Math.PI * i) / N;
+        const x = cxLeft + r * Math.cos(theta);
+        const y = centerY + r * Math.sin(theta);
+        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
+      }
+
+      // 回到胶囊顶切点并垂直归位顶部外缘
+      points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
+      points.push(`${cxLeft.toFixed(2)}px 0%`);
+
+      // 外周右侧与底侧闭合
+      points.push("100% 0%");
+      points.push("100% 100%");
+      points.push("0% 100%");
+      points.push("0% 0%");
+
+      return `polygon(${points.join(", ")})`;
+    }
+  );
 
   /* -------------------------------------------------------------------------
    * • 09. 物理吸附与手势交互引擎 (Physics Snapping & Gesture Handlers)
@@ -500,21 +487,8 @@ export function AppleLiquidTabs<T extends string = string>({
       const { tabWidth } = getMetrics();
       if (tabWidth <= 0) return;
 
-      const targetX = Math.round(index * tabWidth);
+      const targetX = index * tabWidth;
       rawPillX.set(targetX);
-
-      if (restingTimeoutRef.current) {
-        clearTimeout(restingTimeoutRef.current);
-      }
-
-      const settleToRest = () => {
-        springPillX.jump(targetX);
-        scaleX.set(1);
-        scaleY.set(1);
-        setIsResting(true);
-      };
-
-      restingTimeoutRef.current = setTimeout(settleToRest, wobble ? 300 : 220);
 
       // 果冻弹性回弹动画（模拟水滴撞击边界后的微小惯性振荡）
       if (wobble && pillRef.current) {
@@ -522,14 +496,16 @@ export function AppleLiquidTabs<T extends string = string>({
           duration: 0.28,
           ease: "easeOut",
           onComplete: () => {
-            settleToRest();
+            scaleX.set(1);
+            scaleY.set(1);
           },
         });
         animate(scaleY, [0.95, 1.02, 1], {
           duration: 0.28,
           ease: "easeOut",
           onComplete: () => {
-            settleToRest();
+            scaleX.set(1);
+            scaleY.set(1);
           },
         });
       } else {
@@ -537,19 +513,21 @@ export function AppleLiquidTabs<T extends string = string>({
           duration: 0.2,
           ease: "easeOut",
           onComplete: () => {
-            settleToRest();
+            scaleX.set(1);
+            scaleY.set(1);
           },
         });
         animate(scaleY, 1, {
           duration: 0.2,
           ease: "easeOut",
           onComplete: () => {
-            settleToRest();
+            scaleX.set(1);
+            scaleY.set(1);
           },
         });
       }
     },
-    [getMetrics, rawPillX, scaleX, scaleY, springPillX]
+    [getMetrics, rawPillX, scaleX, scaleY]
   );
 
   /**
@@ -573,10 +551,6 @@ export function AppleLiquidTabs<T extends string = string>({
     if (!isDraggingRef.current && hasInitializedRef.current && isMounted) {
       if (prevActiveIndexRef.current !== currentActiveIndex) {
         prevActiveIndexRef.current = currentActiveIndex;
-        if (restingTimeoutRef.current) {
-          clearTimeout(restingTimeoutRef.current);
-        }
-        setIsResting(false);
         snapToIndex(currentActiveIndex, false);
       }
     }
@@ -647,11 +621,7 @@ export function AppleLiquidTabs<T extends string = string>({
     lastTimeRef.current = performance.now();
     velocityRef.current = 0;
 
-    // 1. 立即激活按下态与动态切膜追踪
-    if (restingTimeoutRef.current) {
-      clearTimeout(restingTimeoutRef.current);
-    }
-    setIsResting(false);
+    // 1. 立即激活按下态（即使尚未移动，水珠立刻膨胀并点亮）
     setIsPressed(true);
     setIsDragging(false);
 
@@ -795,10 +765,6 @@ export function AppleLiquidTabs<T extends string = string>({
       if (!isControlled) {
         setInternalValue(item.id);
       }
-      if (restingTimeoutRef.current) {
-        clearTimeout(restingTimeoutRef.current);
-      }
-      setIsResting(false);
       setOptimisticIndex(index);
       snapToIndex(index, false);
 
@@ -904,19 +870,15 @@ export function AppleLiquidTabs<T extends string = string>({
                 • 10.2.1 弯液面光晕圈 (Curved Light Ray Meniscus Rim)
                 - 利用纯净 CSS border 与双向内发光渲染极细微高光边框 (完全摒弃在 iOS 产生瓦片中轴接缝的 maskComposite: xor)
                 - 仅在触摸按下/拖拽活跃交互态显露 (opacity 85%)，静止态彻底隐藏 (opacity 0) 避免与本体重叠造成过厚双边框
-                - 严格通过微动效平滑过渡
+                - 严格通过 LIQUID_SPRING 物理弹簧平滑过渡
                 ----------------------------------------------------------------- */}
             <motion.div
               className="absolute -inset-[1px] rounded-full pointer-events-none border border-white/60 dark:border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),inset_0_-1px_1px_rgba(255,255,255,0.15)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.30),inset_0_-1px_1px_rgba(255,255,255,0.08)]"
               initial={false}
               animate={{
                 opacity: isActive ? 0.85 : 0,
-                visibility: isActive ? "visible" : "hidden",
               }}
-              transition={{
-                opacity: { duration: 0.18, ease: "easeOut" },
-                visibility: { delay: isActive ? 0 : 0.18 },
-              }}
+              transition={LIQUID_SPRING}
             />
 
             {/* -----------------------------------------------------------------
@@ -929,18 +891,14 @@ export function AppleLiquidTabs<T extends string = string>({
               initial={false}
               animate={{
                 opacity: isActive ? 0.35 : 0,
-                visibility: isActive ? "visible" : "hidden",
               }}
-              transition={{
-                opacity: { duration: 0.18, ease: "easeOut" },
-                visibility: { delay: isActive ? 0 : 0.18 },
-              }}
+              transition={LIQUID_SPRING}
             />
 
             {/* -----------------------------------------------------------------
                 • 10.2.3 双层交叉渐变水珠本体 (Cross-Fade Dual Droplet Body)
                 - 采用双层交叉淡入淡出（Cross-Fade）渐变动效架构，完美避免 CSS 类名切换导致的突变
-                - 带来 100% 丝滑连续的有机液体渐变过渡体验
+                - 严格共享 LIQUID_SPRING 物理弹簧，带来 100% 丝滑连续的有机液体渐变过渡体验
                 ----------------------------------------------------------------- */}
             <div className="relative w-full h-full rounded-full overflow-hidden">
               {/* 【静止态水珠外观 (Resting State)】
@@ -957,7 +915,7 @@ export function AppleLiquidTabs<T extends string = string>({
                 animate={{
                   opacity: isActive ? 0 : 1,
                 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
+                transition={LIQUID_SPRING}
               >
                 {/* 静止态顶部一体化无缝柔和反光 (从 top-0 顶缘严密贴合向下渐变，彻底消灭脱节黑色空隙) */}
                 <div
@@ -986,12 +944,8 @@ export function AppleLiquidTabs<T extends string = string>({
                 initial={false}
                 animate={{
                   opacity: isActive ? 1 : 0,
-                  visibility: isActive ? "visible" : "hidden",
                 }}
-                transition={{
-                  opacity: { duration: 0.18, ease: "easeOut" },
-                  visibility: { delay: isActive ? 0 : 0.18 },
-                }}
+                transition={LIQUID_SPRING}
               >
                 {/* 顶部弧面高光聚光带 (Curved Top Specular Arc) */}
                 <div className="absolute inset-x-2 top-0.5 h-[45%] rounded-full bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/30 dark:via-transparent opacity-100" />
@@ -1009,37 +963,136 @@ export function AppleLiquidTabs<T extends string = string>({
           </motion.div>
 
           {/* =================================================================================
-              📄 10.3【Tab 选项交互渲染网格】Liquid Tabs Interactive Grid (Z-20)
+              📄 10.3【Layer 1: 底层灰色常态层】Base Inactive Items Grid (Z-20)
               ---------------------------------------------------------------------------------
-              • 统一单层网格：彻底淘汰产生 iOS WebKit 亚像素破缝白线的 polygon(evenodd, ...) 切膜算法。
-              • 光学透镜交叉淡入淡出：每个 Tab 槽位独立根据 springPillX 实时距离计算 active / inactive 灰蓝渐变，
-                在 120Hz 硬件加速合成器上呈现纯净、无任何接缝瑕疵的原生 Apple iOS 级光学透镜流体质感。
+              • 承载内容：整条导航栏所有 Tab 的灰色文字与图标 (标准尺寸 scale 1.0)
+              • 裁剪算法：clipPathInactive (利用 CSS polygon(evenodd, ...) 奇偶打孔算法)
+              • 核心行为：
+                全底栏正常显示灰色字；唯独在当前水珠所覆盖的坐标窗口内，被若尔当曲线定理
+                打出一个 100% 物理透空的圆角胶囊中空切口！
+                水珠下方的灰色字 100% 物理剔除，绝对杜绝双重重影！
+              • 事件交互：作为实际接受用户点击/键盘无障碍 Tab 焦点的真实按钮层
               ================================================================================= */}
-          <div
-            className="relative z-[20] grid w-full h-full items-center select-none"
-            style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+          <motion.div
+            className="relative z-[20] w-full h-full select-none"
+            style={{
+              clipPath: clipPathInactive,
+              WebkitClipPath: clipPathInactive,
+            }}
           >
-            {items.map((item, index) => (
-              <AppleLiquidTabSlot
-                key={item.id}
-                item={item}
-                index={index}
-                totalItems={items.length}
-                springPillX={springPillX}
-                innerRef={innerRef}
-                currentActiveIndex={currentActiveIndex}
-                activeId={activeId}
-                isActive={isActive}
-                isResting={isResting}
-                orientation={orientation}
-                activeColor={activeColor}
-                itemClass={config.itemClass}
-                iconClass={config.iconClass}
-                tabClassName={tabClassName}
-                onTabClick={handleTabClick}
-              />
-            ))}
-          </div>
+            <div
+              className="grid w-full h-full items-center select-none"
+              style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+            >
+              {items.map((item, index) => {
+                const Icon = item.icon;
+                const isItemActive = index === currentActiveIndex;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={item.id === activeId}
+                    tabIndex={0}
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onClick={(e) => handleTabClick(e, index, item)}
+                    className="flex items-center justify-center w-full h-full rounded-full cursor-pointer select-none outline-none [-webkit-touch-callout:none]"
+                    style={{ WebkitTouchCallout: "none" }}
+                  >
+                    <div
+                      className={cn(
+                        "flex items-center justify-center transition-colors select-none font-medium text-muted-foreground hover:text-foreground",
+                        orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
+                        config.itemClass,
+                        tabClassName,
+                        !isActive && isItemActive && "opacity-0 pointer-events-none"
+                      )}
+                    >
+                      {Icon && (
+                        <Icon className={cn(config.iconClass, "transition-transform shrink-0 stroke-[1.8] opacity-80")} />
+                      )}
+                      <span className="truncate whitespace-nowrap">{item.label}</span>
+                      {item.badge && (
+                        <span className="text-[10px] font-mono opacity-80 shrink-0">{item.badge}</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* =================================================================================
+              🔍 10.4【Layer 2: 顶层蓝色透镜层】Active Masked Reveal Grid (Z-25)
+              ---------------------------------------------------------------------------------
+              • 承载内容：整条导航栏所有 Tab 的高亮蓝色文字、发光阴影与图标
+              • 裁剪算法：clipPathActive (利用 CSS inset(... round 9999px) 胶囊正向裁剪窗口)
+              • 核心行为：
+                整屏默认 100% 裁剪隐藏，只在水珠当前所在的正向圆角窗口内显现出来！
+              • 光学透镜放大物理动画：
+                - 静止态 (resting): scale: 1.0, y: 0（未触摸时不突兀变大）
+                - 活跃态 (isActive): scale: 1.25, y: -2px（触摸按下/拖拽时，文字宛如被凸透镜折射放大并微浮起）
+                - 动效驱动：与水珠位移严格共用 LIQUID_SPRING 物理弹簧，做到同生同灭、毫秒级步调完全一致！
+              • 交互穿透：pointer-events-none + aria-hidden="true"，纯粹作为视觉表现层，无障碍焦点由 Layer 1 处理
+              ================================================================================= */}
+          <motion.div
+            className="absolute inset-0 z-[25] pointer-events-none select-none overflow-visible"
+            style={{
+              clipPath: clipPathActive,
+              WebkitClipPath: clipPathActive,
+            }}
+            aria-hidden="true"
+          >
+            <div
+              className="grid w-full h-full items-center select-none"
+              style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+            >
+              {items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-center w-full h-full rounded-full select-none"
+                  >
+                    <motion.div
+                      animate={{
+                        scale: isActive ? 1.25 : 1.0,
+                        y: isActive ? -2 : 0,
+                      }}
+                      transition={LIQUID_SPRING}
+                      className={cn(
+                        "flex items-center justify-center font-semibold select-none origin-center will-change-transform",
+                        activeColor,
+                        orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
+                        config.itemClass,
+                        tabClassName
+                      )}
+                    >
+                      {Icon && (
+                        <Icon
+                          className={cn(
+                            config.iconClass,
+                            "shrink-0 stroke-[2.2] transition-transform",
+                            "drop-shadow-[0_1px_5px_rgba(0,113,227,0.45)] dark:drop-shadow-[0_1px_8px_rgba(41,151,255,0.65)]"
+                          )}
+                        />
+                      )}
+                      <span className="truncate whitespace-nowrap tracking-tight text-[12px] sm:text-[13px] drop-shadow-[0_1px_4px_rgba(0,113,227,0.30)] dark:drop-shadow-[0_1px_5px_rgba(41,151,255,0.45)]">
+                        {item.label}
+                      </span>
+                      {item.badge && (
+                        <span className="text-[10px] font-mono shrink-0 opacity-95">
+                          {item.badge}
+                        </span>
+                      )}
+                    </motion.div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
         </div>
       </motion.div>
     </>
