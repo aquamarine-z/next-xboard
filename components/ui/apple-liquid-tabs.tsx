@@ -253,8 +253,8 @@ export function AppleLiquidTabs<T extends string = string>({
     switch (size) {
       case "lg":
         return {
-          restingInset: 1,
-          activeOverhang: -8,
+          restingInset: -1,
+          activeOverhang: -9,
           containerClass: "p-1 h-[56px] bg-white/75 dark:bg-[#18181c]/80 backdrop-blur-[24px] saturate-[190%] border border-black/[0.08] dark:border-white/[0.14]",
           itemClass: "h-full px-1 text-[11px]",
           iconClass: "w-[19px] h-[19px]",
@@ -268,8 +268,8 @@ export function AppleLiquidTabs<T extends string = string>({
         };
       case "md":
         return {
-          restingInset: 1,
-          activeOverhang: -7,
+          restingInset: -0.5,
+          activeOverhang: -8,
           containerClass: "p-1 h-[40px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3.5 text-[12.5px]",
           iconClass: "w-3.5 h-3.5",
@@ -284,8 +284,8 @@ export function AppleLiquidTabs<T extends string = string>({
       case "sm":
       default:
         return {
-          restingInset: 1,
-          activeOverhang: -6.5,
+          restingInset: -0.5,
+          activeOverhang: -7.5,
           containerClass: "p-1 h-[36px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3 text-xs",
           iconClass: "w-3.5 h-3.5",
