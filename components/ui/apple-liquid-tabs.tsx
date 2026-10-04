@@ -242,9 +242,9 @@ export function AppleLiquidTabs<T extends string = string>({
   const isDock = variant === "dock" || (variant === undefined && size === "lg");
 
   const config = React.useMemo(() => {
-    // 手机底部 Nav 专用的高透立体微渐变水珠样式（暗色通透空灵、亮色晶莹洁净，单层发丝级 1px 细边）
+    // 手机底部 Nav 专用的高透立体微渐变水珠样式（暗色空灵微透、亮色恰到好处的微烟熏质感，极致单层发丝细边）
     const dockDropletClass =
-      "bg-gradient-to-b from-black/[0.02] via-black/[0.028] to-black/[0.04] dark:from-white/[0.045] dark:via-white/[0.02] dark:to-transparent backdrop-blur-[16px] border border-black/[0.05] dark:border-white/[0.09] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.16)]";
+      "bg-gradient-to-b from-black/[0.035] via-black/[0.042] to-black/[0.055] dark:from-white/[0.035] dark:via-white/[0.015] dark:to-transparent backdrop-blur-[16px] border border-black/[0.055] dark:border-white/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.85)] dark:shadow-[0_1px_4px_rgba(0,0,0,0.4),inset_0_0.5px_0.5px_rgba(255,255,255,0.12)]";
 
     // 常规 Tab (Header / Dashboard / Shop) 保持原有高透微磨砂水珠样式
     const standardDropletClass =
@@ -253,8 +253,8 @@ export function AppleLiquidTabs<T extends string = string>({
     switch (size) {
       case "lg":
         return {
-          restingInset: -1.5,
-          activeOverhang: -9,
+          restingInset: 1,
+          activeOverhang: -8,
           containerClass: "p-1 h-[56px] bg-white/75 dark:bg-[#18181c]/80 backdrop-blur-[24px] saturate-[190%] border border-black/[0.08] dark:border-white/[0.14]",
           itemClass: "h-full px-1 text-[11px]",
           iconClass: "w-[19px] h-[19px]",
@@ -263,13 +263,13 @@ export function AppleLiquidTabs<T extends string = string>({
           restingShadow: "shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]",
           dragShadow: "shadow-[0_24px_54px_-8px_rgba(0,0,0,0.20),0_10px_24px_-4px_rgba(0,0,0,0.12),inset_0_1.5px_1.5px_rgba(255,255,255,0.98)] dark:shadow-[0_32px_68px_-8px_rgba(0,0,0,0.90),0_12px_32px_rgba(0,0,0,0.75),inset_0_1.5px_1.5px_rgba(255,255,255,0.24)] border-black/[0.12] dark:border-white/[0.22]",
           restingDropletClass: isDock ? dockDropletClass : standardDropletClass,
-          restingSpecularClass: isDock ? "opacity-65" : "opacity-30",
-          restingCausticClass: isDock ? "opacity-35" : "opacity-20",
+          restingSpecularClass: isDock ? "opacity-50" : "opacity-30",
+          restingCausticClass: isDock ? "opacity-30" : "opacity-20",
         };
       case "md":
         return {
-          restingInset: -1.5,
-          activeOverhang: -8,
+          restingInset: 1,
+          activeOverhang: -7,
           containerClass: "p-1 h-[40px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3.5 text-[12.5px]",
           iconClass: "w-3.5 h-3.5",
@@ -284,8 +284,8 @@ export function AppleLiquidTabs<T extends string = string>({
       case "sm":
       default:
         return {
-          restingInset: -1.5,
-          activeOverhang: -7.5,
+          restingInset: 1,
+          activeOverhang: -6.5,
           containerClass: "p-1 h-[36px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3 text-xs",
           iconClass: "w-3.5 h-3.5",
@@ -825,11 +825,11 @@ export function AppleLiquidTabs<T extends string = string>({
           className
         )}
       >
-        {/* 顶部拟真高光棱线 (Top Rim Highlight Line)：模拟光线打在玻璃底栏顶缘的极细高光反光 (z-[1]) */}
-        <div className="absolute top-0 left-3 right-3 h-[1.5px] bg-gradient-to-r from-transparent via-white dark:via-white/70 to-transparent pointer-events-none z-[1]" />
+        {/* 顶部拟真高光棱线 (Top Rim Highlight Line)：轻柔优雅，避免在暗色下与水珠重叠显得上下边缘过厚 */}
+        <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent pointer-events-none z-[1]" />
 
         {/* 底部焦散反弹光 (Bottom Rim Highlight Line)：模拟环境底光反射在底栏下沿的微弱漫反射 (z-[1]) */}
-        <div className="absolute bottom-0 left-5 right-5 h-[1px] bg-gradient-to-r from-transparent via-white/60 dark:via-white/25 to-transparent pointer-events-none z-[1]" />
+        <div className="absolute bottom-0 left-5 right-5 h-[1px] bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent pointer-events-none z-[1]" />
 
         {/* 轨道几何容器 (Inner Track Wrapper)：确保水珠物理实体与双层文字严格共享 100% 吻合的内外尺寸参考系 */}
         <div ref={innerRef} className="relative w-full h-full overflow-visible">
@@ -913,20 +913,20 @@ export function AppleLiquidTabs<T extends string = string>({
                 }}
                 transition={LIQUID_SPRING}
               >
-                {/* 静止态顶部细致高光峰线 (Crisp Resting Top Highlight Crest Line) */}
-                <div className="absolute top-[0.5px] inset-x-3.5 h-[1px] bg-gradient-to-r from-transparent via-white/50 dark:via-white/25 to-transparent pointer-events-none" />
+                {/* 静止态顶部细致高光峰线 (极细微光切面，收敛投射范围) */}
+                <div className="absolute top-[0.5px] inset-x-4 h-[0.75px] bg-gradient-to-r from-transparent via-white/40 dark:via-white/16 to-transparent pointer-events-none" />
 
-                {/* 静止态顶部柔和微光反光 (采用 rounded-full 全胶囊弧度，消灭平底硬切线) */}
+                {/* 静止态顶部柔和微光反光 (高度从 40% 缩减至 18%，彻底收敛上下边缘厚度) */}
                 <div
                   className={cn(
-                    "absolute inset-x-2 top-0.5 h-[40%] rounded-full bg-gradient-to-b from-white/60 via-white/10 to-transparent pointer-events-none dark:from-white/20 dark:via-transparent",
+                    "absolute inset-x-2.5 top-0.5 h-[18%] rounded-full bg-gradient-to-b from-white/45 via-white/10 to-transparent pointer-events-none dark:from-white/12 dark:via-transparent",
                     config.restingSpecularClass
                   )}
                 />
-                {/* 静止态底部微弱漫反射 */}
+                {/* 静止态底部微弱漫反射 (高度从 25% 缩减至 12%，消除底部光晕上侵) */}
                 <div
                   className={cn(
-                    "absolute bottom-0.5 inset-x-3 h-[25%] rounded-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/[0.08]",
+                    "absolute bottom-0.5 inset-x-4 h-[12%] rounded-full bg-gradient-to-t from-white/20 to-transparent pointer-events-none dark:from-white/[0.04]",
                     config.restingCausticClass
                   )}
                 />
