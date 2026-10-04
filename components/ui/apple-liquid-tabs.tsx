@@ -26,6 +26,7 @@ export interface AppleLiquidTabsProps<T = string> {
   tabClassName?: string;
   activeColor?: string;
   elevateOnDrag?: boolean;
+  variant?: "default" | "dock";
 }
 
 /**
@@ -111,6 +112,7 @@ export function AppleLiquidTabs<T extends string = string>({
   tabClassName,
   activeColor = "text-[#0071e3] dark:text-[#2997ff]",
   elevateOnDrag = false,
+  variant,
 }: AppleLiquidTabsProps<T>) {
   const router = useRouter();
 
@@ -189,13 +191,22 @@ export function AppleLiquidTabs<T extends string = string>({
   // ---------------------------------------------------------------------------------------
   // 📏 尺寸与样式规格配置 (Sizing Configurations)
   // ---------------------------------------------------------------------------------------
-  // 根据 size ("sm" | "md" | "lg") 动态适配内边距、活跃态外溢高度 (overhang)、毛玻璃浓度及阴影
-  // - restingInset: 静止常态下水珠相对 inner 轨道的内/外缩距离。
-  //   设置为 -1.5px 时，配合容器的 p-1 (4px padding)，使水珠与底栏外边框之间的间隙从约 5px-5.5px
-  //   精确缩减至 2.5px（缩减 50% 留空），使静止态水珠更高更饱满，同时保留精致间隙绝不与边框重合。
-  // - activeOverhang: 活跃交互时，水珠向上和向下「暴突/溢出」底栏轨道的距离（负值，如 -7.5px ~ -9px），
-  //   形成像真实水滴一样突破表面张力、凸出于导航条上方的立体感！
+  // 核心视觉分工判定：
+  // - 仅底部导航栏 (手机 bottom nav, 即 variant === "dock" 或默认 size === "lg"):
+  //   底栏本身为白底 (bg-white/75)，未激活态水珠采用浅烟熏微灰立体渐变 (from-black/5 to-black/8.5)，清晰辨识！
+  // - 其他常规 Tab (顶部 Header、Dashboard、Shop 页面，size 为 sm 或 md):
+  //   底栏背景自带灰色轨道 (bg-black/[0.04])，未激活态水珠保持原有纯白磨砂质感 (bg-white/80)，黑白对比分明。
+  const isDock = variant === "dock" || (variant === undefined && size === "lg");
+
   const config = React.useMemo(() => {
+    // 手机底部 Nav 专用的浅色微灰立体微渐变水珠样式
+    const dockDropletClass =
+      "bg-gradient-to-b from-black/[0.05] via-black/[0.065] to-black/[0.085] dark:from-white/[0.10] dark:via-white/[0.08] dark:to-white/[0.06] backdrop-blur-[12px] border border-black/[0.08] dark:border-white/[0.12] shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]";
+
+    // 常规 Tab (Header / Dashboard / Shop) 保持原有纯白磨砂水珠样式
+    const standardDropletClass =
+      "bg-white/80 dark:bg-white/[0.08] backdrop-blur-[12px] border border-black/[0.04] dark:border-white/[0.10] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]";
+
     switch (size) {
       case "lg":
         return {
@@ -208,10 +219,13 @@ export function AppleLiquidTabs<T extends string = string>({
           elevationY: -3,
           restingShadow: "shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]",
           dragShadow: "shadow-[0_24px_54px_-8px_rgba(0,0,0,0.20),0_10px_24px_-4px_rgba(0,0,0,0.12),inset_0_1.5px_1.5px_rgba(255,255,255,0.98)] dark:shadow-[0_32px_68px_-8px_rgba(0,0,0,0.90),0_12px_32px_rgba(0,0,0,0.75),inset_0_1.5px_1.5px_rgba(255,255,255,0.24)] border-black/[0.12] dark:border-white/[0.22]",
+          restingDropletClass: isDock ? dockDropletClass : standardDropletClass,
+          restingSpecularClass: isDock ? "opacity-40" : "opacity-30",
+          restingCausticClass: isDock ? "opacity-30" : "opacity-20",
         };
       case "md":
         return {
-          restingInset: -1.5,
+          restingInset: isDock ? -1.5 : 1,
           activeOverhang: -8,
           containerClass: "p-1 h-[40px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3.5 text-[12.5px]",
@@ -220,11 +234,14 @@ export function AppleLiquidTabs<T extends string = string>({
           elevationY: -2.5,
           restingShadow: "shadow-2xs",
           dragShadow: "shadow-md border-black/[0.10] dark:border-white/[0.16]",
+          restingDropletClass: isDock ? dockDropletClass : standardDropletClass,
+          restingSpecularClass: isDock ? "opacity-40" : "opacity-30",
+          restingCausticClass: isDock ? "opacity-30" : "opacity-20",
         };
       case "sm":
       default:
         return {
-          restingInset: -1.5,
+          restingInset: isDock ? -1.5 : 1,
           activeOverhang: -7.5,
           containerClass: "p-1 h-[36px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3 text-xs",
@@ -233,9 +250,12 @@ export function AppleLiquidTabs<T extends string = string>({
           elevationY: -2,
           restingShadow: "shadow-2xs",
           dragShadow: "shadow-md border-black/[0.10] dark:border-white/[0.16]",
+          restingDropletClass: isDock ? dockDropletClass : standardDropletClass,
+          restingSpecularClass: isDock ? "opacity-40" : "opacity-30",
+          restingCausticClass: isDock ? "opacity-30" : "opacity-20",
         };
     }
-  }, [size]);
+  }, [size, isDock]);
 
   // ---------------------------------------------------------------------------------------
   // 🎢 物理运动变量 (Motion Values & Springs)
@@ -776,7 +796,10 @@ export function AppleLiquidTabs<T extends string = string>({
                   - 随 isActive 渐变淡出 (opacity: 0)，松手时渐变淡入 (opacity: 1)。
                   ----------------------------------------------------------------- */}
               <motion.div
-                className="absolute inset-0 rounded-full overflow-hidden bg-gradient-to-b from-black/[0.05] via-black/[0.065] to-black/[0.085] dark:from-white/[0.10] dark:via-white/[0.08] dark:to-white/[0.06] backdrop-blur-[12px] border border-black/[0.08] dark:border-white/[0.12] shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]"
+                className={cn(
+                  "absolute inset-0 rounded-full overflow-hidden",
+                  config.restingDropletClass
+                )}
                 initial={false}
                 animate={{
                   opacity: isActive ? 0 : 1,
@@ -784,9 +807,19 @@ export function AppleLiquidTabs<T extends string = string>({
                 transition={LIQUID_SPRING}
               >
                 {/* 静止态顶部柔和微光反光 */}
-                <div className="absolute inset-x-2 top-0.5 h-[40%] rounded-t-full bg-gradient-to-b from-white/60 via-white/10 to-transparent pointer-events-none dark:from-white/20 dark:via-transparent opacity-40" />
+                <div
+                  className={cn(
+                    "absolute inset-x-2 top-0.5 h-[40%] rounded-t-full bg-gradient-to-b from-white/60 via-white/10 to-transparent pointer-events-none dark:from-white/20 dark:via-transparent",
+                    config.restingSpecularClass
+                  )}
+                />
                 {/* 静止态底部微弱漫反射 */}
-                <div className="absolute bottom-0 inset-x-3 h-[25%] rounded-b-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/10 opacity-30" />
+                <div
+                  className={cn(
+                    "absolute bottom-0 inset-x-3 h-[25%] rounded-b-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/10",
+                    config.restingCausticClass
+                  )}
+                />
               </motion.div>
 
               {/* -----------------------------------------------------------------

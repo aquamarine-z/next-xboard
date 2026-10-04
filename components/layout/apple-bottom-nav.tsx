@@ -59,6 +59,7 @@ export function AppleBottomNav() {
     >
       <AppleLiquidTabs
         size="lg"
+        variant="dock"
         orientation="vertical"
         isRouteNav
         elevateOnDrag={true}
