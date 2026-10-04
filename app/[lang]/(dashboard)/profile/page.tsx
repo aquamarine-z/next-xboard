@@ -742,9 +742,9 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="divide-y divide-border/50 text-xs">
-                  {inviteCodes.map((inv) => (
+                  {inviteCodes.map((inv, index) => (
                     <div
-                      key={inv.id}
+                      key={inv.id ?? inv.code ?? index}
                       className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
                     >
                       <div className="space-y-1">
@@ -818,9 +818,9 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="divide-y divide-border/50 text-xs">
-                      {inviteDetails.map((record) => (
+                      {inviteDetails.map((record, index) => (
                         <div
-                          key={record.id}
+                          key={record.id ?? `${record.created_at}-${index}`}
                           className="py-2.5 flex items-center justify-between"
                         >
                           <div className="space-y-0.5">
