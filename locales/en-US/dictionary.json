@@ -235,7 +235,7 @@
     "running_mode": "Runtime Environment",
     "mode_pwa": "PWA Standalone App",
     "mode_browser": "Web Browser",
-    "check_update": "Check for Updates",
+    "check_update": "Check Updates",
     "checking_update": "Checking...",
     "update_latest": "Already up to date (v{version})",
     "update_found": "New version found, clearing cache and updating..."

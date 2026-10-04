@@ -234,7 +234,7 @@
     "running_mode": "実行環境",
     "mode_pwa": "PWA ネイティブアプリ",
     "mode_browser": "Web ブラウザ",
-    "check_update": "アップデートを確認",
+    "check_update": "更新を確認",
     "checking_update": "確認中...",
     "update_latest": "最新バージョンです (v{version})",
     "update_found": "新しいバージョンが見つかりました。更新しています..."

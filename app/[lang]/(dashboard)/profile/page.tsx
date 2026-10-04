@@ -454,7 +454,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Row 3: Reset Secret */}
-              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-3.5 sm:gap-4 transition-colors hover:bg-secondary/20">
+              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20">
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                   <div className="w-9 h-9 rounded-[11px] bg-destructive/10 text-destructive flex items-center justify-center shrink-0 select-none">
                     <RefreshCw className="w-4.5 h-4.5 select-none" />
@@ -472,7 +472,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleResetSecret}
-                  className="apple-pill-btn text-xs bg-destructive/10 text-destructive hover:bg-destructive hover:text-white border border-destructive/20 flex items-center gap-1.5 py-1 px-3 select-none h-7 shrink-0 transition-all cursor-pointer shadow-2xs"
+                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-7 shrink-0 text-[11px] font-medium border border-destructive/25 bg-destructive/10 text-destructive hover:bg-destructive hover:text-white select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer"
                 >
                   <RefreshCw className="w-3.5 h-3.5 select-none" />
                   <span className="select-none">{t("profile.reset_security_btn")}</span>
@@ -944,9 +944,9 @@ export default function ProfilePage() {
             </span>
             <div className="rounded-[20px] border border-border bg-card overflow-hidden shadow-xs divide-y divide-border/60">
               {/* App Version & Build */}
-              <div className="py-4 px-5 sm:py-4.5 sm:px-6 flex items-center justify-between gap-4 select-none">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className="w-10 h-10 rounded-[12px] bg-black text-white dark:bg-white/10 dark:text-foreground flex items-center justify-center shrink-0 shadow-xs overflow-hidden border border-border/50">
+              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20 select-none">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="w-9 h-9 rounded-[11px] bg-black text-white dark:bg-white/10 dark:text-foreground flex items-center justify-center shrink-0 shadow-xs overflow-hidden border border-border/50 select-none">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src="/icons/icon-192x192.png"
@@ -957,16 +957,16 @@ export default function ProfilePage() {
                       }}
                     />
                   </div>
-                  <div className="min-w-0 flex flex-col justify-center gap-0.5">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[13.5px] font-semibold text-foreground">
+                  <div className="min-w-0 flex-1 flex flex-col justify-center gap-1 sm:gap-1.5">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <p className="text-[13.5px] font-semibold text-foreground truncate">
                         {config?.title || "Aqua VPS"}
                       </p>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                      <span className="text-[10.5px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium shrink-0">
                         v{APP_VERSION}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground font-mono">
+                    <p className="text-xs sm:text-[12.5px] text-muted-foreground font-mono leading-normal truncate">
                       Build {APP_BUILD}
                     </p>
                   </div>
@@ -976,55 +976,55 @@ export default function ProfilePage() {
                   type="button"
                   onClick={handleCheckUpdate}
                   disabled={checkingUpdate}
-                  className="apple-pill-btn text-xs bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center gap-1.5 py-1 px-3.5 select-none h-7.5 shrink-0 transition-all cursor-pointer shadow-xs shadow-[#0066cc]/25 font-medium disabled:opacity-60"
+                  className="apple-pill-btn relative overflow-hidden inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-7 shrink-0 text-[11px] font-medium border border-border/80 bg-secondary/50 text-[#48484a] dark:text-[#d1d1d6] hover:text-foreground hover:bg-secondary select-none active:scale-95 transition-all duration-200 ease-out cursor-pointer disabled:opacity-50"
                 >
-                  <RefreshCw className={cn("w-3 h-3 text-white", checkingUpdate && "animate-spin")} />
-                  <span>
+                  <RefreshCw className={cn("w-3.5 h-3.5 select-none", checkingUpdate && "animate-spin")} />
+                  <span className="select-none">
                     {checkingUpdate ? t("profile.checking_update") : t("profile.check_update")}
                   </span>
                 </button>
               </div>
 
               {/* Running Mode (PWA Standalone vs Browser) */}
-              <div className="py-3.5 px-5 sm:py-4 sm:px-6 flex items-center justify-between gap-4 select-none">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-8 h-8 rounded-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                    <Smartphone className="w-4 h-4" />
+              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20 select-none">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="w-9 h-9 rounded-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 select-none">
+                    <Smartphone className="w-4.5 h-4.5 select-none" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-medium text-foreground tracking-tight">
                       {t("profile.running_mode")}
                     </p>
                   </div>
                 </div>
-                <div>
+                <div className="shrink-0 flex items-center">
                   {isStandalone ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11.5px] font-medium">
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      {t("profile.mode_pwa")}
+                    <span className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium select-none">
+                      <CheckCircle2 className="w-3.5 h-3.5 select-none" />
+                      <span>{t("profile.mode_pwa")}</span>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/5 dark:bg-white/10 text-muted-foreground text-[11.5px] font-medium">
-                      <Globe className="w-3.5 h-3.5" />
-                      {t("profile.mode_browser")}
+                    <span className="inline-flex items-center gap-1.5 px-2.5 h-7 rounded-full border border-border/80 bg-secondary/50 text-[#48484a] dark:text-[#d1d1d6] text-[11px] font-medium select-none">
+                      <Globe className="w-3.5 h-3.5 select-none" />
+                      <span>{t("profile.mode_browser")}</span>
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Release Date */}
-              <div className="py-3.5 px-5 sm:py-4 sm:px-6 flex items-center justify-between gap-4 select-none">
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <div className="w-8 h-8 rounded-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                    <Calendar className="w-4 h-4" />
+              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20 select-none">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <div className="w-9 h-9 rounded-[11px] bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 select-none">
+                    <Calendar className="w-4.5 h-4.5 select-none" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13.5px] font-medium text-foreground tracking-tight">
                       {t("profile.release_date_label")}
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-muted-foreground font-mono">
+                <span className="text-xs sm:text-[12.5px] text-muted-foreground font-mono shrink-0 select-none">
                   {RELEASE_DATE}
                 </span>
               </div>
