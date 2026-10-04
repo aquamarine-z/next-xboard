@@ -584,24 +584,24 @@
    ========================================================================== */
 
 .pwa-safe-top {
-  padding-top: max(0.625rem, calc(env(safe-area-inset-top, 0px) + 0.5rem));
+  padding-top: max(0.875rem, calc(env(safe-area-inset-top, 0px) + 1.25rem));
 }
 
 @media (min-width: 640px) {
   .pwa-safe-top {
-    padding-top: max(0.875rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
+    padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 1.25rem));
   }
 }
 
 [data-sonner-toaster][data-y-position='top'] {
-  top: max(6.25rem, calc(env(safe-area-inset-top, 0px) + 5.5rem)) !important;
+  top: max(7rem, calc(env(safe-area-inset-top, 0px) + 6.25rem)) !important;
 }
 
 /* Mobile: Login page sonner pulled down to avoid iOS PWA status bar, Dynamic Island & frosted glass safe area */
 [data-sonner-toaster][data-y-position='top'].is-login-page,
 [data-sonner-toaster][data-y-position='top'][data-login-page='true'],
 body:has([data-page='login']) [data-sonner-toaster][data-y-position='top'] {
-  top: max(8.75rem, calc(env(safe-area-inset-top, 0px) + 7.75rem)) !important;
+  top: max(9.25rem, calc(env(safe-area-inset-top, 0px) + 8.25rem)) !important;
 }
 
 /* ==========================================================================
