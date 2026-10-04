@@ -404,13 +404,13 @@ export function AppleLiquidTabs<T extends string = string>({
       const rightSideP = 100 - rightP;
 
       if (!isMounted || !innerRef.current) {
-        return `polygon(evenodd, 0% 0%, ${leftP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%)`;
+        return `polygon(evenodd, -40px -40px, ${leftP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% -40px, calc(100% + 40px) -40px, calc(100% + 40px) calc(100% + 40px), -40px calc(100% + 40px), -40px -40px)`;
       }
 
       const w = innerRef.current.offsetWidth;
       const h = innerRef.current.offsetHeight;
       if (w <= 0 || h <= 0) {
-        return `polygon(evenodd, 0% 0%, ${leftP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%)`;
+        return `polygon(evenodd, -40px -40px, ${leftP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% -40px, calc(100% + 40px) -40px, calc(100% + 40px) calc(100% + 40px), -40px calc(100% + 40px), -40px -40px)`;
       }
 
       const tabWidth = items.length > 0 ? w / items.length : 0;
@@ -431,10 +431,11 @@ export function AppleLiquidTabs<T extends string = string>({
       const cxLeft = left + r;
       const cxRight = Math.max(cxLeft, right - r);
 
-      // 沿顶缘外轮廓单连通自然切槽：外圈顺时针，内圈胶囊逆时针环绕
+      // 沿外轮廓（向外拓展 40px）切入：彻底移除 y=0 处的任何多边形边缘，
+      // 杜绝 iOS WebKit Metal 亚像素抗锯齿在 y=0 渲染出横贯底栏的白线发丝瑕疵！
       const points: string[] = [
-        "0% 0%",
-        `${cxLeft.toFixed(2)}px 0px`,
+        "-40px -40px",
+        `${cxLeft.toFixed(2)}px -40px`,
         `${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`,
       ];
 
@@ -460,14 +461,14 @@ export function AppleLiquidTabs<T extends string = string>({
 
       // 4. 顶部水平切线向左回归 cxLeft 切点
       points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
-      // 垂直回归顶边缘
-      points.push(`${cxLeft.toFixed(2)}px 0px`);
+      // 垂直回归顶边缘外侧
+      points.push(`${cxLeft.toFixed(2)}px -40px`);
 
-      // 5. 外圈右侧与底侧闭合
-      points.push("100% 0px");
-      points.push("100% 100%");
-      points.push("0% 100%");
-      points.push("0% 0px");
+      // 5. 外圈右侧与底侧闭合在容器之外
+      points.push("calc(100% + 40px) -40px");
+      points.push("calc(100% + 40px) calc(100% + 40px)");
+      points.push("-40px calc(100% + 40px)");
+      points.push("-40px -40px");
 
       return `polygon(evenodd, ${points.join(", ")})`;
     }
@@ -829,8 +830,8 @@ export function AppleLiquidTabs<T extends string = string>({
           className
         )}
       >
-        {/* 顶部拟真高光棱线 (Top Rim Highlight Line)：轻柔优雅，避免在暗色下与水珠重叠显得上下边缘过厚 */}
-        <div className="absolute top-0 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-white/80 dark:via-white/20 to-transparent pointer-events-none z-[1]" />
+        {/* 顶部拟真高光棱线 (Top Rim Highlight Line)：轻柔微弱，避免在暗色下形成刺眼白线 */}
+        <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-white/30 dark:via-white/8 to-transparent pointer-events-none z-[1]" />
 
         {/* 底部焦散反弹光 (Bottom Rim Highlight Line)：模拟环境底光反射在底栏下沿的微弱漫反射 (z-[1]) */}
         <div className="absolute bottom-0 left-5 right-5 h-[1px] bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent pointer-events-none z-[1]" />

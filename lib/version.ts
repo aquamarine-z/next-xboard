@@ -7,7 +7,7 @@
  */
 
 export const APP_VERSION = "1.0.0";
-export const APP_BUILD = "20261004.2";
+export const APP_BUILD = "20261004.3";
 export const RELEASE_DATE = "2026-10-04";
 
 export interface VersionInfo {

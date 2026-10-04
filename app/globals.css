@@ -584,12 +584,12 @@
    ========================================================================== */
 
 .pwa-safe-top {
-  padding-top: max(0.875rem, calc(env(safe-area-inset-top, 0px) + 1.25rem));
+  padding-top: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.75rem));
 }
 
 @media (min-width: 640px) {
   .pwa-safe-top {
-    padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 1.25rem));
+    padding-top: max(1rem, calc(env(safe-area-inset-top, 0px) + 0.875rem));
   }
 }
 
