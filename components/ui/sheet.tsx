@@ -6,6 +6,7 @@ import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { incrementModalCount, decrementModalCount } from "@/lib/modal-lock"
 
 function Sheet({ ...props }: SheetPrimitive.Root.Props) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />
@@ -24,6 +25,13 @@ function SheetPortal({ ...props }: SheetPrimitive.Portal.Props) {
 }
 
 function SheetOverlay({ className, ...props }: SheetPrimitive.Backdrop.Props) {
+  React.useEffect(() => {
+    incrementModalCount()
+    return () => {
+      decrementModalCount()
+    }
+  }, [])
+
   return (
     <SheetPrimitive.Backdrop
       data-slot="sheet-overlay"

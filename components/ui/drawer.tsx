@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Drawer as DrawerPrimitive } from "@base-ui/react/drawer"
 import { cn } from "cn"
+import { incrementModalCount, decrementModalCount } from "@/lib/modal-lock"
 
 type DrawerContextProps = {
   hasSnapPoints: boolean
@@ -67,6 +68,13 @@ function DrawerOverlay({
   className,
   ...props
 }: DrawerPrimitive.Backdrop.Props) {
+  React.useEffect(() => {
+    incrementModalCount()
+    return () => {
+      decrementModalCount()
+    }
+  }, [])
+
   return (
     <DrawerPrimitive.Backdrop
       data-slot="drawer-overlay"

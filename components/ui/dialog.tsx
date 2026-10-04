@@ -6,6 +6,7 @@ import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { incrementModalCount, decrementModalCount } from "@/lib/modal-lock"
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
@@ -27,6 +28,13 @@ function DialogOverlay({
   className,
   ...props
 }: DialogPrimitive.Backdrop.Props) {
+  React.useEffect(() => {
+    incrementModalCount()
+    return () => {
+      decrementModalCount()
+    }
+  }, [])
+
   return (
     <DialogPrimitive.Backdrop
       data-slot="dialog-overlay"

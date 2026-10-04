@@ -442,8 +442,8 @@ export function AppleLiquidTabs<T extends string = string>({
       points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
       points.push(`${cxRight.toFixed(2)}px ${yTop.toFixed(2)}px`);
 
-      // 右半圆弧采样 (8 个平滑分段)
-      const N = 8;
+      // 右半圆弧采样 (9 个平滑分段，奇数采样规避 y=centerY 轴向接缝)
+      const N = 9;
       for (let i = 1; i <= N; i++) {
         const theta = -Math.PI / 2 + (Math.PI * i) / N;
         const x = cxRight + r * Math.cos(theta);
@@ -454,7 +454,7 @@ export function AppleLiquidTabs<T extends string = string>({
       // 底部水平切线
       points.push(`${cxLeft.toFixed(2)}px ${yBottom.toFixed(2)}px`);
 
-      // 左半圆弧采样 (8 个平滑分段)
+      // 左半圆弧采样 (9 个平滑分段，奇数采样规避 y=centerY 轴向接缝)
       for (let i = 1; i <= N; i++) {
         const theta = Math.PI / 2 + (Math.PI * i) / N;
         const x = cxLeft + r * Math.cos(theta);
@@ -491,14 +491,36 @@ export function AppleLiquidTabs<T extends string = string>({
         animate(scaleX, [1.05, 0.98, 1], {
           duration: 0.28,
           ease: "easeOut",
+          onComplete: () => {
+            scaleX.set(1);
+            scaleY.set(1);
+          },
         });
         animate(scaleY, [0.95, 1.02, 1], {
           duration: 0.28,
           ease: "easeOut",
+          onComplete: () => {
+            scaleX.set(1);
+            scaleY.set(1);
+          },
         });
       } else {
-        animate(scaleX, 1, { duration: 0.2, ease: "easeOut" });
-        animate(scaleY, 1, { duration: 0.2, ease: "easeOut" });
+        animate(scaleX, 1, {
+          duration: 0.2,
+          ease: "easeOut",
+          onComplete: () => {
+            scaleX.set(1);
+            scaleY.set(1);
+          },
+        });
+        animate(scaleY, 1, {
+          duration: 0.2,
+          ease: "easeOut",
+          onComplete: () => {
+            scaleX.set(1);
+            scaleY.set(1);
+          },
+        });
       }
     },
     [getMetrics, rawPillX, scaleX, scaleY]
@@ -959,6 +981,7 @@ export function AppleLiquidTabs<T extends string = string>({
             >
               {items.map((item, index) => {
                 const Icon = item.icon;
+                const isItemActive = index === currentActiveIndex;
                 return (
                   <button
                     key={item.id}
@@ -978,7 +1001,8 @@ export function AppleLiquidTabs<T extends string = string>({
                         "flex items-center justify-center transition-colors select-none font-medium text-muted-foreground hover:text-foreground",
                         orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
                         config.itemClass,
-                        tabClassName
+                        tabClassName,
+                        !isActive && isItemActive && "opacity-0 pointer-events-none"
                       )}
                     >
                       {Icon && (
