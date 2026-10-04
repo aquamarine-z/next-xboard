@@ -538,16 +538,16 @@ export default function ProfilePage() {
               </div>
 
               {/* Row 3: Account Balance */}
-              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20">
-                <div className="flex items-center gap-4 min-w-0 flex-1">
+              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2.5 transition-colors hover:bg-secondary/20">
+                <div className="flex items-center gap-4 min-w-0">
                   <div className="w-9 h-9 rounded-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 select-none">
                     <Wallet className="w-4.5 h-4.5 select-none" />
                   </div>
-                  <div className="min-w-0 flex-1 flex flex-col justify-center gap-1 sm:gap-1.5">
-                    <p className="text-[13.5px] font-medium text-foreground tracking-tight select-none">
+                  <div className="min-w-0 flex flex-col justify-center gap-1 sm:gap-1.5">
+                    <p className="text-[13.5px] font-medium text-foreground tracking-tight select-none whitespace-nowrap">
                       {t("profile.balance_label")}
                     </p>
-                    <p className="text-xs sm:text-[12.5px] text-muted-foreground font-mono leading-normal">
+                    <p className="text-xs sm:text-[12.5px] text-muted-foreground font-mono leading-normal whitespace-nowrap">
                       <span className="select-none">¥ </span>{((user.balance || 0) / 100).toFixed(2)}
                     </p>
                   </div>
@@ -555,9 +555,9 @@ export default function ProfilePage() {
 
                 <Link
                   href={`/${locale}/shop`}
-                  className="apple-pill-btn text-xs bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center gap-1.5 py-1 px-3.5 select-none h-7 shrink-0 transition-all font-medium shadow-xs shadow-[#0066cc]/25 cursor-pointer"
+                  className="apple-pill-btn text-xs bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center gap-1.5 py-1 px-3.5 select-none h-7 shrink-0 transition-all font-medium shadow-xs shadow-[#0066cc]/25 cursor-pointer whitespace-nowrap"
                 >
-                  <span className="select-none">{t("dashboard.buy_plan_cta")}</span>
+                  <span className="select-none whitespace-nowrap">{t("dashboard.buy_plan_cta")}</span>
                 </Link>
               </div>
             </div>
@@ -619,28 +619,28 @@ export default function ProfilePage() {
 
           {/* 6. Inset Group 4: 推广返利与我的邀请 (Merged Affiliate Feature - Screenshot 2) */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground select-none">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 px-1 pb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground select-none whitespace-nowrap">
                 {t("invites.title")}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">
                 {t("invites.subtitle")}
               </span>
             </div>
 
             {/* Top Commission Hero Card */}
             <div className="rounded-[22px] border border-border bg-card p-5 sm:p-6 shadow-xs space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
-                <div className="space-y-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 pb-4 border-b border-border/60">
+                <div className="space-y-1 shrink-0">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl sm:text-4xl font-semibold apple-hero text-foreground tracking-tight font-mono">
+                    <span className="text-3xl sm:text-4xl font-semibold apple-hero text-foreground tracking-tight font-mono whitespace-nowrap">
                       {((user.commission_balance || 0) / 100).toFixed(2)}
                     </span>
                     <span className="text-sm font-semibold text-muted-foreground select-none">
                       CNY
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground whitespace-nowrap">
                     {t("invites.commission_balance")}
                   </p>
                 </div>
@@ -650,19 +650,19 @@ export default function ProfilePage() {
                   <button
                     type="button"
                     onClick={handleTransfer}
-                    className="apple-pill-btn h-9 px-4 rounded-full bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-all ios-touch-feedback active:scale-[0.98] cursor-pointer select-none"
+                    className="apple-pill-btn h-9 px-4 rounded-full bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white text-xs font-medium flex items-center gap-1.5 shadow-xs transition-all ios-touch-feedback active:scale-[0.98] cursor-pointer select-none shrink-0 whitespace-nowrap"
                   >
-                    <ArrowRightLeft className="w-3.5 h-3.5" />
-                    <span>{t("invites.transfer_to_balance")}</span>
+                    <ArrowRightLeft className="w-3.5 h-3.5 shrink-0" />
+                    <span className="whitespace-nowrap">{t("invites.transfer_to_balance")}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleWithdraw}
-                    className="apple-pill-btn h-9 px-4 rounded-full border border-border/80 bg-secondary/60 hover:bg-secondary text-foreground text-xs font-medium flex items-center gap-1.5 transition-all ios-touch-feedback active:scale-[0.98] cursor-pointer select-none"
+                    className="apple-pill-btn h-9 px-4 rounded-full border border-border/80 bg-secondary/60 hover:bg-secondary text-foreground text-xs font-medium flex items-center gap-1.5 transition-all ios-touch-feedback active:scale-[0.98] cursor-pointer select-none shrink-0 whitespace-nowrap"
                   >
-                    <HandCoins className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff]" />
-                    <span>{t("invites.withdraw")}</span>
+                    <HandCoins className="w-3.5 h-3.5 text-[#0071e3] dark:text-[#2997ff] shrink-0" />
+                    <span className="whitespace-nowrap">{t("invites.withdraw")}</span>
                   </button>
                 </div>
               </div>
@@ -713,10 +713,10 @@ export default function ProfilePage() {
 
             {/* Invite Codes Management */}
             <div className="rounded-[22px] border border-border bg-card p-5 shadow-xs space-y-3.5">
-              <div className="flex items-center justify-between gap-3 pb-3 border-b border-border/60">
-                <div className="flex items-center gap-2">
-                  <Share2 className="w-4 h-4 text-[#0071e3]" />
-                  <h3 className="text-sm font-semibold text-foreground">
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5 pb-3.5 border-b border-border/60">
+                <div className="flex items-center gap-2 shrink-0">
+                  <Share2 className="w-4 h-4 text-[#0071e3] shrink-0" />
+                  <h3 className="text-sm font-semibold text-foreground whitespace-nowrap">
                     {t("invites.manage_codes")}
                   </h3>
                 </div>
@@ -725,14 +725,14 @@ export default function ProfilePage() {
                   type="button"
                   onClick={handleGenerateCode}
                   disabled={generatingCode}
-                  className="apple-pill-btn h-7 px-3 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium flex items-center gap-1 shadow-2xs select-none cursor-pointer"
+                  className="apple-pill-btn h-7 px-3.5 rounded-full bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-medium inline-flex items-center gap-1.5 shadow-2xs select-none cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   {generatingCode ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
                   ) : (
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 shrink-0" />
                   )}
-                  <span>{t("invites.generate_code")}</span>
+                  <span className="whitespace-nowrap">{t("invites.generate_code")}</span>
                 </button>
               </div>
 
@@ -745,30 +745,30 @@ export default function ProfilePage() {
                   {inviteCodes.map((inv, index) => (
                     <div
                       key={inv.id ?? inv.code ?? index}
-                      className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5"
+                      className="py-3.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-2.5"
                     >
-                      <div className="space-y-1">
+                      <div className="space-y-1 shrink-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-semibold text-sm text-foreground">
+                          <span className="font-mono font-semibold text-sm text-foreground whitespace-nowrap">
                             {inv.code}
                           </span>
-                          <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 select-none">
+                          <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 select-none whitespace-nowrap">
                             Active
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground font-mono">
+                        <p className="text-[11px] text-muted-foreground font-mono whitespace-nowrap">
                           {formatDate(inv.created_at)}
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2.5 self-start sm:self-auto">
+                      <div className="flex items-center gap-2.5 shrink-0">
                         <AppleCopyButton
                           textToCopy={getInviteUrl(inv.code)}
                           defaultText={t("invites.copy_invite_link")}
                           copiedText={t("common.copied")}
                           size="sm"
                           variant="secondary"
-                          className="h-7 text-xs px-3 sm:px-3.5"
+                          className="h-7 text-xs px-3.5 sm:px-4 shrink-0 whitespace-nowrap"
                         />
                         <AppleCopyButton
                           textToCopy={inv.code}
@@ -776,7 +776,7 @@ export default function ProfilePage() {
                           copiedText={t("common.copied")}
                           size="sm"
                           mode="text"
-                          className="h-7 text-xs px-2.5 sm:px-3"
+                          className="h-7 text-xs px-3 sm:px-3.5 shrink-0 whitespace-nowrap"
                         />
                       </div>
                     </div>
@@ -846,13 +846,13 @@ export default function ProfilePage() {
               {t("profile.third_party_integration")}
             </span>
             <div className="rounded-[20px] border border-border bg-card overflow-hidden shadow-xs">
-              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-3.5 sm:gap-4 transition-colors hover:bg-secondary/20">
-                <div className="flex items-center gap-4 min-w-0 flex-1">
+              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 transition-colors hover:bg-secondary/20">
+                <div className="flex items-center gap-4 min-w-0">
                   <div className="w-9 h-9 rounded-[11px] bg-sky-500/10 text-sky-500 dark:text-sky-400 flex items-center justify-center shrink-0 select-none">
                     <Send className="w-4.5 h-4.5 select-none" />
                   </div>
-                  <div className="min-w-0 flex-1 flex flex-col justify-center gap-1 sm:gap-1.5">
-                    <p className="text-[13.5px] font-medium text-foreground tracking-tight select-none">
+                  <div className="min-w-0 flex flex-col justify-center gap-1 sm:gap-1.5">
+                    <p className="text-[13.5px] font-medium text-foreground tracking-tight select-none whitespace-nowrap">
                       {t("profile.telegram_bind")}
                     </p>
                     <p className="text-xs sm:text-[12.5px] text-muted-foreground leading-normal select-none">
@@ -864,10 +864,10 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={handleTelegramBind}
-                  className="apple-pill-btn text-xs bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center gap-1.5 py-1 px-3.5 select-none h-7 shrink-0 transition-all cursor-pointer shadow-xs shadow-[#0066cc]/25 font-medium"
+                  className="apple-pill-btn text-xs bg-gradient-to-r from-[#0071e3] to-[#0066cc] hover:from-[#0077ed] hover:to-[#005bb5] text-white flex items-center gap-1.5 py-1 px-3.5 select-none h-7 shrink-0 transition-all cursor-pointer shadow-xs shadow-[#0066cc]/25 font-medium whitespace-nowrap"
                 >
-                  <Send className="w-3 h-3 select-none text-white" />
-                  <span className="select-none">{t("profile.bind_now")}</span>
+                  <Send className="w-3 h-3 select-none text-white shrink-0" />
+                  <span className="select-none whitespace-nowrap">{t("profile.bind_now")}</span>
                 </button>
               </div>
             </div>
@@ -944,8 +944,8 @@ export default function ProfilePage() {
             </span>
             <div className="rounded-[20px] border border-border bg-card overflow-hidden shadow-xs divide-y divide-border/60">
               {/* App Version & Build */}
-              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/20 select-none">
-                <div className="flex items-center gap-4 min-w-0 flex-1">
+              <div className="py-4.5 px-5 sm:py-5 sm:px-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 transition-colors hover:bg-secondary/20 select-none">
+                <div className="flex items-center gap-4 min-w-0">
                   <div className="w-9 h-9 rounded-[11px] bg-black text-white dark:bg-white/10 dark:text-foreground flex items-center justify-center shrink-0 shadow-xs overflow-hidden border border-border/50 select-none">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
@@ -957,16 +957,16 @@ export default function ProfilePage() {
                       }}
                     />
                   </div>
-                  <div className="min-w-0 flex-1 flex flex-col justify-center gap-1 sm:gap-1.5">
+                  <div className="min-w-0 flex flex-col justify-center gap-1 sm:gap-1.5">
                     <div className="flex items-center gap-2 min-w-0">
-                      <p className="text-[13.5px] font-semibold text-foreground truncate">
+                      <p className="text-[13.5px] font-semibold text-foreground whitespace-nowrap">
                         {config?.title || "Aqua VPS"}
                       </p>
                       <span className="text-[10.5px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium shrink-0">
                         v{APP_VERSION}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-[12.5px] text-muted-foreground font-mono leading-normal truncate">
+                    <p className="text-xs sm:text-[12.5px] text-muted-foreground font-mono leading-normal whitespace-nowrap">
                       Build {APP_BUILD}
                     </p>
                   </div>
