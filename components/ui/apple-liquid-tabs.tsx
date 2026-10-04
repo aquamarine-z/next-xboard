@@ -242,9 +242,9 @@ export function AppleLiquidTabs<T extends string = string>({
   const isDock = variant === "dock" || (variant === undefined && size === "lg");
 
   const config = React.useMemo(() => {
-    // 手机底部 Nav 专用的浅色微灰立体微渐变水珠样式
+    // 手机底部 Nav 专用的浅色微灰通透立体微渐变水珠样式（降低灰度，呈现纯净晶透质感）
     const dockDropletClass =
-      "bg-gradient-to-b from-black/[0.05] via-black/[0.065] to-black/[0.085] dark:from-white/[0.10] dark:via-white/[0.08] dark:to-white/[0.06] backdrop-blur-[12px] border border-black/[0.08] dark:border-white/[0.12] shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]";
+      "bg-gradient-to-b from-black/[0.02] via-black/[0.028] to-black/[0.04] dark:from-white/[0.10] dark:via-white/[0.08] dark:to-white/[0.06] backdrop-blur-[12px] border border-black/[0.05] dark:border-white/[0.12] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]";
 
     // 常规 Tab (Header / Dashboard / Shop) 保持原有纯白磨砂水珠样式
     const standardDropletClass =
@@ -263,8 +263,8 @@ export function AppleLiquidTabs<T extends string = string>({
           restingShadow: "shadow-[0_1px_3px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]",
           dragShadow: "shadow-[0_24px_54px_-8px_rgba(0,0,0,0.20),0_10px_24px_-4px_rgba(0,0,0,0.12),inset_0_1.5px_1.5px_rgba(255,255,255,0.98)] dark:shadow-[0_32px_68px_-8px_rgba(0,0,0,0.90),0_12px_32px_rgba(0,0,0,0.75),inset_0_1.5px_1.5px_rgba(255,255,255,0.24)] border-black/[0.12] dark:border-white/[0.22]",
           restingDropletClass: isDock ? dockDropletClass : standardDropletClass,
-          restingSpecularClass: isDock ? "opacity-40" : "opacity-30",
-          restingCausticClass: isDock ? "opacity-30" : "opacity-20",
+          restingSpecularClass: isDock ? "opacity-65" : "opacity-30",
+          restingCausticClass: isDock ? "opacity-35" : "opacity-20",
         };
       case "md":
         return {
