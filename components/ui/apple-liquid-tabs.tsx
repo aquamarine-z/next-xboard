@@ -703,9 +703,14 @@ export function AppleLiquidTabs<T extends string = string>({
                     key={item.id}
                     className="flex items-center justify-center w-full h-full rounded-full select-none"
                   >
-                    <div
+                    <motion.div
+                      animate={{
+                        scale: isActive ? 1.25 : 1.0,
+                        y: isActive ? -2 : 0,
+                      }}
+                      transition={LIQUID_SPRING}
                       className={cn(
-                        "flex items-center justify-center font-semibold select-none origin-center will-change-transform scale-125 -translate-y-0.5",
+                        "flex items-center justify-center font-semibold select-none origin-center will-change-transform",
                         activeColor,
                         orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
                         config.itemClass,
@@ -729,7 +734,7 @@ export function AppleLiquidTabs<T extends string = string>({
                           {item.badge}
                         </span>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
                 );
               })}
