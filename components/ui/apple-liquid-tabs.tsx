@@ -342,7 +342,17 @@ export function AppleLiquidTabs<T extends string = string>({
   }, [items.length]);
 
   const [isMounted, setIsMounted] = React.useState(false);
+  const [isResting, setIsResting] = React.useState(true);
+  const restingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const prevActiveIndexRef = React.useRef(currentActiveIndex);
+
+  React.useEffect(() => {
+    return () => {
+      if (restingTimeoutRef.current) {
+        clearTimeout(restingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   /* -------------------------------------------------------------------------
    * • 08. 光学互斥遮罩矩阵 (Optical Complementary Masking System)
@@ -483,8 +493,21 @@ export function AppleLiquidTabs<T extends string = string>({
       const { tabWidth } = getMetrics();
       if (tabWidth <= 0) return;
 
-      const targetX = index * tabWidth;
+      const targetX = Math.round(index * tabWidth);
       rawPillX.set(targetX);
+
+      if (restingTimeoutRef.current) {
+        clearTimeout(restingTimeoutRef.current);
+      }
+
+      const settleToRest = () => {
+        springPillX.jump(targetX);
+        scaleX.set(1);
+        scaleY.set(1);
+        setIsResting(true);
+      };
+
+      restingTimeoutRef.current = setTimeout(settleToRest, wobble ? 300 : 220);
 
       // 果冻弹性回弹动画（模拟水滴撞击边界后的微小惯性振荡）
       if (wobble && pillRef.current) {
@@ -492,16 +515,14 @@ export function AppleLiquidTabs<T extends string = string>({
           duration: 0.28,
           ease: "easeOut",
           onComplete: () => {
-            scaleX.set(1);
-            scaleY.set(1);
+            settleToRest();
           },
         });
         animate(scaleY, [0.95, 1.02, 1], {
           duration: 0.28,
           ease: "easeOut",
           onComplete: () => {
-            scaleX.set(1);
-            scaleY.set(1);
+            settleToRest();
           },
         });
       } else {
@@ -509,21 +530,19 @@ export function AppleLiquidTabs<T extends string = string>({
           duration: 0.2,
           ease: "easeOut",
           onComplete: () => {
-            scaleX.set(1);
-            scaleY.set(1);
+            settleToRest();
           },
         });
         animate(scaleY, 1, {
           duration: 0.2,
           ease: "easeOut",
           onComplete: () => {
-            scaleX.set(1);
-            scaleY.set(1);
+            settleToRest();
           },
         });
       }
     },
-    [getMetrics, rawPillX, scaleX, scaleY]
+    [getMetrics, rawPillX, scaleX, scaleY, springPillX]
   );
 
   /**
@@ -547,6 +566,10 @@ export function AppleLiquidTabs<T extends string = string>({
     if (!isDraggingRef.current && hasInitializedRef.current && isMounted) {
       if (prevActiveIndexRef.current !== currentActiveIndex) {
         prevActiveIndexRef.current = currentActiveIndex;
+        if (restingTimeoutRef.current) {
+          clearTimeout(restingTimeoutRef.current);
+        }
+        setIsResting(false);
         snapToIndex(currentActiveIndex, false);
       }
     }
@@ -617,7 +640,11 @@ export function AppleLiquidTabs<T extends string = string>({
     lastTimeRef.current = performance.now();
     velocityRef.current = 0;
 
-    // 1. 立即激活按下态（即使尚未移动，水珠立刻膨胀并点亮）
+    // 1. 立即激活按下态与动态切膜追踪
+    if (restingTimeoutRef.current) {
+      clearTimeout(restingTimeoutRef.current);
+    }
+    setIsResting(false);
     setIsPressed(true);
     setIsDragging(false);
 
@@ -761,6 +788,10 @@ export function AppleLiquidTabs<T extends string = string>({
       if (!isControlled) {
         setInternalValue(item.id);
       }
+      if (restingTimeoutRef.current) {
+        clearTimeout(restingTimeoutRef.current);
+      }
+      setIsResting(false);
       setOptimisticIndex(index);
       snapToIndex(index, false);
 
@@ -866,15 +897,19 @@ export function AppleLiquidTabs<T extends string = string>({
                 • 10.2.1 弯液面光晕圈 (Curved Light Ray Meniscus Rim)
                 - 利用纯净 CSS border 与双向内发光渲染极细微高光边框 (完全摒弃在 iOS 产生瓦片中轴接缝的 maskComposite: xor)
                 - 仅在触摸按下/拖拽活跃交互态显露 (opacity 85%)，静止态彻底隐藏 (opacity 0) 避免与本体重叠造成过厚双边框
-                - 严格通过 LIQUID_SPRING 物理弹簧平滑过渡
+                - 严格通过微动效平滑过渡
                 ----------------------------------------------------------------- */}
             <motion.div
               className="absolute -inset-[1px] rounded-full pointer-events-none border border-white/60 dark:border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),inset_0_-1px_1px_rgba(255,255,255,0.15)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.30),inset_0_-1px_1px_rgba(255,255,255,0.08)]"
               initial={false}
               animate={{
                 opacity: isActive ? 0.85 : 0,
+                visibility: isActive ? "visible" : "hidden",
               }}
-              transition={LIQUID_SPRING}
+              transition={{
+                opacity: { duration: 0.18, ease: "easeOut" },
+                visibility: { delay: isActive ? 0 : 0.18 },
+              }}
             />
 
             {/* -----------------------------------------------------------------
@@ -887,14 +922,18 @@ export function AppleLiquidTabs<T extends string = string>({
               initial={false}
               animate={{
                 opacity: isActive ? 0.35 : 0,
+                visibility: isActive ? "visible" : "hidden",
               }}
-              transition={LIQUID_SPRING}
+              transition={{
+                opacity: { duration: 0.18, ease: "easeOut" },
+                visibility: { delay: isActive ? 0 : 0.18 },
+              }}
             />
 
             {/* -----------------------------------------------------------------
                 • 10.2.3 双层交叉渐变水珠本体 (Cross-Fade Dual Droplet Body)
                 - 采用双层交叉淡入淡出（Cross-Fade）渐变动效架构，完美避免 CSS 类名切换导致的突变
-                - 严格共享 LIQUID_SPRING 物理弹簧，带来 100% 丝滑连续的有机液体渐变过渡体验
+                - 带来 100% 丝滑连续的有机液体渐变过渡体验
                 ----------------------------------------------------------------- */}
             <div className="relative w-full h-full rounded-full overflow-hidden">
               {/* 【静止态水珠外观 (Resting State)】
@@ -911,7 +950,7 @@ export function AppleLiquidTabs<T extends string = string>({
                 animate={{
                   opacity: isActive ? 0 : 1,
                 }}
-                transition={LIQUID_SPRING}
+                transition={{ duration: 0.18, ease: "easeOut" }}
               >
                 {/* 静止态顶部一体化无缝柔和反光 (从 top-0 顶缘严密贴合向下渐变，彻底消灭脱节黑色空隙) */}
                 <div
@@ -940,8 +979,12 @@ export function AppleLiquidTabs<T extends string = string>({
                 initial={false}
                 animate={{
                   opacity: isActive ? 1 : 0,
+                  visibility: isActive ? "visible" : "hidden",
                 }}
-                transition={LIQUID_SPRING}
+                transition={{
+                  opacity: { duration: 0.18, ease: "easeOut" },
+                  visibility: { delay: isActive ? 0 : 0.18 },
+                }}
               >
                 {/* 顶部弧面高光聚光带 (Curved Top Specular Arc) */}
                 <div className="absolute inset-x-2 top-0.5 h-[45%] rounded-full bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/30 dark:via-transparent opacity-100" />
@@ -972,8 +1015,8 @@ export function AppleLiquidTabs<T extends string = string>({
           <motion.div
             className="relative z-[20] w-full h-full select-none"
             style={{
-              clipPath: clipPathInactive,
-              WebkitClipPath: clipPathInactive,
+              clipPath: isResting ? undefined : clipPathInactive,
+              WebkitClipPath: isResting ? undefined : clipPathInactive,
             }}
           >
             <div
@@ -1003,7 +1046,7 @@ export function AppleLiquidTabs<T extends string = string>({
                         orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
                         config.itemClass,
                         tabClassName,
-                        !isActive && isItemActive && "opacity-0 pointer-events-none"
+                        isItemActive && isResting && "opacity-0 pointer-events-none"
                       )}
                     >
                       {Icon && (
@@ -1036,8 +1079,8 @@ export function AppleLiquidTabs<T extends string = string>({
           <motion.div
             className="absolute inset-0 z-[25] pointer-events-none select-none overflow-visible"
             style={{
-              clipPath: clipPathActive,
-              WebkitClipPath: clipPathActive,
+              clipPath: isResting ? undefined : clipPathActive,
+              WebkitClipPath: isResting ? undefined : clipPathActive,
             }}
             aria-hidden="true"
           >
@@ -1045,12 +1088,16 @@ export function AppleLiquidTabs<T extends string = string>({
               className="grid w-full h-full items-center select-none"
               style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
             >
-              {items.map((item) => {
+              {items.map((item, index) => {
                 const Icon = item.icon;
+                const isItemActive = index === currentActiveIndex;
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center justify-center w-full h-full rounded-full select-none"
+                    className={cn(
+                      "flex items-center justify-center w-full h-full rounded-full select-none",
+                      !isItemActive && isResting && "opacity-0 pointer-events-none"
+                    )}
                   >
                     <motion.div
                       animate={{
