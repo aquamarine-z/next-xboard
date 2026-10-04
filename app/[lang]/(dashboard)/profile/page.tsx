@@ -761,14 +761,14 @@ export default function ProfilePage() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <div className="flex items-center gap-2.5 self-start sm:self-auto">
                         <AppleCopyButton
                           textToCopy={getInviteUrl(inv.code)}
                           defaultText={t("invites.copy_invite_link")}
                           copiedText={t("common.copied")}
                           size="sm"
                           variant="secondary"
-                          className="h-7 text-xs px-2.5"
+                          className="h-7 text-xs px-3 sm:px-3.5"
                         />
                         <AppleCopyButton
                           textToCopy={inv.code}
@@ -776,7 +776,7 @@ export default function ProfilePage() {
                           copiedText={t("common.copied")}
                           size="sm"
                           mode="text"
-                          className="h-7 text-xs px-2"
+                          className="h-7 text-xs px-2.5 sm:px-3"
                         />
                       </div>
                     </div>
