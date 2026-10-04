@@ -179,18 +179,33 @@ export function AppleLiquidTabs<T extends string = string>({
     return { tabWidth, maxTargetX, scaleFactor, innerLeft: rect.left, innerWidth };
   }, [items.length]);
 
+  const [isMounted, setIsMounted] = React.useState(false);
+  const prevActiveIndexRef = React.useRef(currentActiveIndex);
+
   // Continuous iOS-style optical lens clipping mask:
-  // Dynamically expands during active state, strictly bounded when resting
+  // Dynamically expands during active state, strictly bounded when resting.
+  // Uses exact CSS percentage before layout mount to eliminate any initial jump/flicker!
   const clipPath = useTransform(
     [springPillX, scaleX],
     ([latestX, latestScaleX]: number[]) => {
-      const w = innerRef.current?.offsetWidth || 300;
+      const leftP = (currentActiveIndex * 100) / items.length;
+      const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
+      const vert = isActive ? "-16px" : "-2px";
+
+      if (!isMounted || !innerRef.current) {
+        return `inset(${vert} ${rightP.toFixed(2)}% ${vert} ${leftP.toFixed(2)}% round 9999px)`;
+      }
+
+      const w = innerRef.current.offsetWidth;
+      if (w <= 0) {
+        return `inset(${vert} ${rightP.toFixed(2)}% ${vert} ${leftP.toFixed(2)}% round 9999px)`;
+      }
+
       const tabWidth = items.length > 0 ? w / items.length : 0;
       const center = (latestX ?? 0) + tabWidth / 2;
       const currentWidth = tabWidth * (latestScaleX ?? 1);
       const left = Math.max(0, center - currentWidth / 2);
       const right = Math.max(0, w - (center + currentWidth / 2));
-      const vert = isActive ? "-16px" : "-2px";
 
       return `inset(${vert} ${right.toFixed(2)}px ${vert} ${left.toFixed(2)}px round 9999px)`;
     }
@@ -215,14 +230,14 @@ export function AppleLiquidTabs<T extends string = string>({
           ease: "easeOut",
         });
       } else {
-        scaleX.set(1);
-        scaleY.set(1);
+        animate(scaleX, 1, { duration: 0.2, ease: "easeOut" });
+        animate(scaleY, 1, { duration: 0.2, ease: "easeOut" });
       }
     },
     [getMetrics, rawPillX, scaleX, scaleY]
   );
 
-  // Instant placement on mount
+  // Instant placement on mount without animation or wobble
   React.useEffect(() => {
     const { tabWidth } = getMetrics();
     if (tabWidth > 0 && !hasInitializedRef.current) {
@@ -230,27 +245,35 @@ export function AppleLiquidTabs<T extends string = string>({
       const initialX = currentActiveIndex * tabWidth;
       rawPillX.set(initialX);
       springPillX.jump(initialX);
+      prevActiveIndexRef.current = currentActiveIndex;
+      setIsMounted(true);
     }
   }, [getMetrics, currentActiveIndex, rawPillX, springPillX]);
 
-  // Sync with prop changes when not dragging
+  // Sync with prop changes when not dragging (route navigation)
   React.useEffect(() => {
-    if (!isDraggingRef.current && hasInitializedRef.current) {
-      snapToIndex(currentActiveIndex, true);
+    if (!isDraggingRef.current && hasInitializedRef.current && isMounted) {
+      if (prevActiveIndexRef.current !== currentActiveIndex) {
+        prevActiveIndexRef.current = currentActiveIndex;
+        snapToIndex(currentActiveIndex, false);
+      }
     }
-  }, [currentActiveIndex, snapToIndex]);
+  }, [currentActiveIndex, isMounted, snapToIndex]);
 
   // ResizeObserver: auto-reposition accurately whenever width changes
   React.useEffect(() => {
     if (!innerRef.current) return;
     const observer = new ResizeObserver(() => {
-      if (!isDraggingRef.current) {
-        snapToIndex(currentActiveIndex, false);
+      if (!isDraggingRef.current && hasInitializedRef.current) {
+        const { tabWidth } = getMetrics();
+        if (tabWidth > 0) {
+          rawPillX.set(currentActiveIndex * tabWidth);
+        }
       }
     });
     observer.observe(innerRef.current);
     return () => observer.disconnect();
-  }, [currentActiveIndex, snapToIndex]);
+  }, [currentActiveIndex, getMetrics, rawPillX]);
 
   // Calculates pill X position such that pointer is at the exact center of the droplet,
   // with rubber-band resistance curve when exceeding bounds
@@ -495,8 +518,8 @@ export function AppleLiquidTabs<T extends string = string>({
             transition={LIQUID_SPRING}
             style={{
               width: `${100 / items.length}%`,
-              left: 0,
-              x: springPillX,
+              left: isMounted ? 0 : `${(currentActiveIndex * 100) / items.length}%`,
+              x: isMounted ? springPillX : 0,
               scaleX,
               scaleY,
               transformOrigin: "center center",
