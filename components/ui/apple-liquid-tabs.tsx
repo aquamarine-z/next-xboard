@@ -171,17 +171,55 @@ export function AppleLiquidTabs<T extends string = string>({
   const [optimisticIndex, setOptimisticIndex] = React.useState<number | null>(null);
 
   /**
-   * 3. 手势交互状态机：
+   * 3. 意图锁定与动画互斥控制器 (Pending Intent Lock & Mutex)：
+   *    • pendingTargetIdRef: 追踪用户主动点击的最新目标 Tab ID。
+   *      当先后快速点击两个 Tab 时，较慢的第一个异步路由完成后返回的旧 value 不会覆盖乐观索引，彻底根除“倒退抽搐”。
+   *    • scaleAnimationControlsRef: 统一控制果冻缩放补间动画，避免多重动画并发冲突导致尺寸剧烈撕扯。
+   */
+  const pendingTargetIdRef = React.useRef<T | null>(null);
+  const pendingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const scaleAnimationControlsRef = React.useRef<{ stop: () => void } | null>(null);
+
+  const stopScaleAnimation = React.useCallback(() => {
+    if (scaleAnimationControlsRef.current) {
+      scaleAnimationControlsRef.current.stop();
+      scaleAnimationControlsRef.current = null;
+    }
+  }, []);
+
+  /**
+   * 4. 手势交互状态机：
    *    • isDragging: 触摸或鼠标按下并在水平轴上位移超过 2px，进入持续拖拽跟随模式
    *    • isPressed:  按下的瞬间立即为 true（即使尚未移动），用于触发水珠膨胀与文字放大
    */
   const [isDragging, setIsDragging] = React.useState(false);
   const [isPressed, setIsPressed] = React.useState(false);
 
-  // 外部 Props 变化时（如浏览器前进/后退、父组件重置状态），同步清空乐观索引
+  // 外部 Props 变化时（如路由跳转完成或浏览器前进/后退）
   React.useEffect(() => {
-    setOptimisticIndex(null);
+    if (value !== undefined) {
+      if (pendingTargetIdRef.current !== null) {
+        // 如果外部传来的 value 正是用户最新点击的目标，解除锁定并清空乐观索引
+        if (value === pendingTargetIdRef.current) {
+          pendingTargetIdRef.current = null;
+          if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+          setOptimisticIndex(null);
+        }
+        // 否则（这是过期的中间旧路由响应），保持锁定并忽略，坚决不回弹抽搐！
+      } else {
+        // 无待处理意图（如外部代码主动更改、浏览器前进后退等），正常同步
+        setOptimisticIndex(null);
+      }
+    }
   }, [value]);
+
+  // 组件卸载时安全清理定时器与动画
+  React.useEffect(() => {
+    return () => {
+      if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+      if (scaleAnimationControlsRef.current) scaleAnimationControlsRef.current.stop();
+    };
+  }, []);
 
   /**
    * 4. 路由静默预加载 (Next.js Link Prefetching)：
@@ -324,21 +362,34 @@ export function AppleLiquidTabs<T extends string = string>({
   const scaleY = useMotionValue(1);
 
   /**
-   * 轨道几何尺寸测量 (getMetrics)：
-   * 消除父级 CSS transform（如 scale 缩放）、高分屏 Retina DPI 渲染偏差：
-   * 利用 rect.width / innerWidth 计算出真实的缩放比例 scaleFactor，
-   * 保证光标在任何缩放环境下都能 100% 精确对齐水珠中心。
+   * 轨道几何尺寸测量与性能缓存 (Metrics Cache)：
+   * 彻底根治布局抖动 (Forced Synchronous Layout Thrashing)：
+   * 在拖拽高频触发的 handlePointerMove (120Hz) 以及每帧渲染的 clipPath 计算中，
+   * 绝不频繁调用 getBoundingClientRect() 或 offsetWidth/offsetHeight！
+   * 统一通过 metricsRef 缓存读取，仅在 PointerDown、挂载、以及 ResizeObserver 中刷新几何测量。
    */
+  const metricsRef = React.useRef({
+    tabWidth: 0,
+    maxTargetX: 0,
+    scaleFactor: 1,
+    innerLeft: 0,
+    innerWidth: 0,
+    innerHeight: 0,
+  });
+
   const getMetrics = React.useCallback(() => {
     if (!innerRef.current) {
-      return { tabWidth: 0, maxTargetX: 0, scaleFactor: 1, innerLeft: 0, innerWidth: 0 };
+      return { tabWidth: 0, maxTargetX: 0, scaleFactor: 1, innerLeft: 0, innerWidth: 0, innerHeight: 0 };
     }
     const rect = innerRef.current.getBoundingClientRect();
     const innerWidth = innerRef.current.offsetWidth || rect.width;
+    const innerHeight = innerRef.current.offsetHeight || rect.height;
     const scaleFactor = innerWidth > 0 && rect.width > 0 ? rect.width / innerWidth : 1;
     const tabWidth = items.length > 0 ? innerWidth / items.length : 0;
     const maxTargetX = Math.max(0, innerWidth - tabWidth);
-    return { tabWidth, maxTargetX, scaleFactor, innerLeft: rect.left, innerWidth };
+    const metrics = { tabWidth, maxTargetX, scaleFactor, innerLeft: rect.left, innerWidth, innerHeight };
+    metricsRef.current = metrics;
+    return metrics;
   }, [items.length]);
 
   const [isMounted, setIsMounted] = React.useState(false);
@@ -352,7 +403,7 @@ export function AppleLiquidTabs<T extends string = string>({
    * 🔍【裁剪层 1】clipPathActive: 顶层高亮蓝色文字的正向透镜显露窗口
    * -------------------------------------------------------------------------
    * • 核心作用：只让水珠透镜内部的圆角胶囊区域显露，外部区域 100% 裁剪隐藏。
-   * • 几何对齐：边界 top/bottom 严格取 topOffset，与物理水珠 pillRef 及底层打孔完全同构。
+   * • 性能极致化：直接使用缓存的 innerWidth，杜绝每帧强制回流重排。
    * • 亚像素补偿：左右各施加 0.75px 膨胀缓冲 (Dilation Buffer)，杜绝 GPU 抗锯齿接缝漏底。
    */
   const clipPathActive = useTransform(
@@ -362,13 +413,9 @@ export function AppleLiquidTabs<T extends string = string>({
       const leftP = (currentActiveIndex * 100) / items.length;
       const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
 
-      if (!isMounted || !innerRef.current) {
-        return `inset(${topOffset.toFixed(2)}px ${rightP.toFixed(2)}% ${topOffset.toFixed(2)}px ${leftP.toFixed(2)}% round 9999px)`;
-      }
-
-      const w = innerRef.current.offsetWidth;
-      if (w <= 0) {
-        return `inset(${topOffset.toFixed(2)}px ${rightP.toFixed(2)}% ${topOffset.toFixed(2)}px ${leftP.toFixed(2)}% round 9999px)`;
+      const { innerWidth: w } = metricsRef.current;
+      if (!isMounted || w <= 0) {
+        return `inset(${topOffset.toFixed(1)}px ${rightP.toFixed(1)}% ${topOffset.toFixed(1)}px ${leftP.toFixed(1)}% round 9999px)`;
       }
 
       const tabWidth = items.length > 0 ? w / items.length : 0;
@@ -381,7 +428,7 @@ export function AppleLiquidTabs<T extends string = string>({
       const activeLeft = Math.max(0, left - 0.75);
       const activeRight = Math.min(w, right + 0.75);
 
-      return `inset(${topOffset.toFixed(2)}px ${(w - activeRight).toFixed(2)}px ${topOffset.toFixed(2)}px ${activeLeft.toFixed(2)}px round 9999px)`;
+      return `inset(${topOffset.toFixed(1)}px ${(w - activeRight).toFixed(1)}px ${topOffset.toFixed(1)}px ${activeLeft.toFixed(1)}px round 9999px)`;
     }
   );
 
@@ -390,11 +437,7 @@ export function AppleLiquidTabs<T extends string = string>({
    * -------------------------------------------------------------------------
    * • 空间互斥定律：Layer 1 (全景 minus 透镜) + Layer 2 (透镜) ≡ 完整导航栏。
    * • 零重叠保证：始终与 springPillX 严格同步，在水珠所在位置物理打出一个 100% 通透的中空圆角胶囊切口。
-   *   底层灰色字在水珠窗口内 100% 物理剔除，绝对杜绝双重重影重叠！
-   * • 根治发丝白线 (Zero-Seam Contour):
-   *   淘汰产生跨屏横切桥线的旧算法，改用沿顶缘自然行进的逆时针闭合轮廓：
-   *   (0% 0%) -> (cxLeft, 0%) -> (cxLeft, yTop) -> [逆时针环绕胶囊] -> (cxLeft, yTop) -> (cxLeft, 0%) -> (100% 0%) -> (100% 100%) -> (0% 100%) -> (0% 0%)
-   *   进出切缝完全重叠为竖向缝线，且 100% 隐匿于水珠胶囊实体的高光与毛玻璃下方，消除横截底栏的白线！
+   * • 性能优化：采样点 N 优化为 6，降低字符串开销；直接读取尺寸缓存，杜绝布局抖动。
    */
   const clipPathInactive = useTransform(
     [springPillX, scaleX],
@@ -403,14 +446,9 @@ export function AppleLiquidTabs<T extends string = string>({
       const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
       const rightSideP = 100 - rightP;
 
-      if (!isMounted || !innerRef.current) {
-        return `polygon(evenodd, -40px -40px, ${leftP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% -40px, calc(100% + 40px) -40px, calc(100% + 40px) calc(100% + 40px), -40px calc(100% + 40px), -40px -40px)`;
-      }
-
-      const w = innerRef.current.offsetWidth;
-      const h = innerRef.current.offsetHeight;
-      if (w <= 0 || h <= 0) {
-        return `polygon(evenodd, -40px -40px, ${leftP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% calc(100% + 40px), ${rightSideP.toFixed(2)}% -40px, ${leftP.toFixed(2)}% -40px, calc(100% + 40px) -40px, calc(100% + 40px) calc(100% + 40px), -40px calc(100% + 40px), -40px -40px)`;
+      const { innerWidth: w, innerHeight: h } = metricsRef.current;
+      if (!isMounted || w <= 0 || h <= 0) {
+        return `polygon(evenodd, -40px -40px, ${leftP.toFixed(1)}% -40px, ${leftP.toFixed(1)}% calc(100% + 40px), ${rightSideP.toFixed(1)}% calc(100% + 40px), ${rightSideP.toFixed(1)}% -40px, ${leftP.toFixed(1)}% -40px, calc(100% + 40px) -40px, calc(100% + 40px) calc(100% + 40px), -40px calc(100% + 40px), -40px -40px)`;
       }
 
       const tabWidth = items.length > 0 ? w / items.length : 0;
@@ -431,40 +469,35 @@ export function AppleLiquidTabs<T extends string = string>({
       const cxLeft = left + r;
       const cxRight = Math.max(cxLeft, right - r);
 
-      // 沿外轮廓（向外拓展 40px）切入：彻底移除 y=0 处的任何多边形边缘，
-      // 杜绝 iOS WebKit Metal 亚像素抗锯齿在 y=0 渲染出横贯底栏的白线发丝瑕疵！
       const points: string[] = [
         "-40px -40px",
-        `${cxLeft.toFixed(2)}px -40px`,
-        `${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`,
+        `${cxLeft.toFixed(1)}px -40px`,
+        `${cxLeft.toFixed(1)}px ${yTop.toFixed(1)}px`,
       ];
 
-      // 1. 左半圆弧逆时针采样 (Counter-Clockwise: 从顶部 -PI/2 经左侧 -PI 向下至底部 -3*PI/2)
-      const N = 9;
+      // 1. 左半圆弧逆时针采样 (Counter-Clockwise: N=6，极佳平滑度且几何计算量减少 33%)
+      const N = 6;
       for (let i = 1; i <= N; i++) {
         const theta = -Math.PI / 2 - (Math.PI * i) / N;
         const x = cxLeft + r * Math.cos(theta);
         const y = centerY + r * Math.sin(theta);
-        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
+        points.push(`${x.toFixed(1)}px ${y.toFixed(1)}px`);
       }
 
       // 2. 底部水平切线向右至右半圆切点
-      points.push(`${cxRight.toFixed(2)}px ${yBottom.toFixed(2)}px`);
+      points.push(`${cxRight.toFixed(1)}px ${yBottom.toFixed(1)}px`);
 
-      // 3. 右半圆弧逆时针采样 (Counter-Clockwise: 从底部 PI/2 经右侧 0 向上至顶部 -PI/2)
+      // 3. 右半圆弧逆时针采样
       for (let i = 1; i <= N; i++) {
         const theta = Math.PI / 2 - (Math.PI * i) / N;
         const x = cxRight + r * Math.cos(theta);
         const y = centerY + r * Math.sin(theta);
-        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
+        points.push(`${x.toFixed(1)}px ${y.toFixed(1)}px`);
       }
 
-      // 4. 顶部水平切线向左回归 cxLeft 切点
-      points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
-      // 垂直回归顶边缘外侧
-      points.push(`${cxLeft.toFixed(2)}px -40px`);
-
-      // 5. 外圈右侧与底侧闭合在容器之外
+      // 4. 顶部水平切线向左回归 cxLeft 切点并垂直闭合
+      points.push(`${cxLeft.toFixed(1)}px ${yTop.toFixed(1)}px`);
+      points.push(`${cxLeft.toFixed(1)}px -40px`);
       points.push("calc(100% + 40px) -40px");
       points.push("calc(100% + 40px) calc(100% + 40px)");
       points.push("-40px calc(100% + 40px)");
@@ -485,50 +518,43 @@ export function AppleLiquidTabs<T extends string = string>({
    */
   const snapToIndex = React.useCallback(
     (index: number, wobble = true) => {
-      const { tabWidth } = getMetrics();
+      const { tabWidth } = metricsRef.current;
       if (tabWidth <= 0) return;
 
       const targetX = index * tabWidth;
       rawPillX.set(targetX);
 
-      // 果冻弹性回弹动画（模拟水滴撞击边界后的微小惯性振荡）
-      if (wobble && pillRef.current) {
-        animate(scaleX, [1.05, 0.98, 1], {
-          duration: 0.28,
+      // 先停止任何未完成的缩放动画，防止多重动画竞态打架导致抽搐
+      stopScaleAnimation();
+
+      if (wobble) {
+        const animX = animate(scaleX, [1.04, 0.98, 1], {
+          duration: 0.24,
           ease: "easeOut",
           onComplete: () => {
             scaleX.set(1);
-            scaleY.set(1);
+            scaleAnimationControlsRef.current = null;
           },
         });
-        animate(scaleY, [0.95, 1.02, 1], {
-          duration: 0.28,
+        const animY = animate(scaleY, [0.96, 1.02, 1], {
+          duration: 0.24,
           ease: "easeOut",
           onComplete: () => {
-            scaleX.set(1);
             scaleY.set(1);
           },
         });
+        scaleAnimationControlsRef.current = {
+          stop: () => {
+            animX.stop();
+            animY.stop();
+          },
+        };
       } else {
-        animate(scaleX, 1, {
-          duration: 0.2,
-          ease: "easeOut",
-          onComplete: () => {
-            scaleX.set(1);
-            scaleY.set(1);
-          },
-        });
-        animate(scaleY, 1, {
-          duration: 0.2,
-          ease: "easeOut",
-          onComplete: () => {
-            scaleX.set(1);
-            scaleY.set(1);
-          },
-        });
+        scaleX.set(1);
+        scaleY.set(1);
       }
     },
-    [getMetrics, rawPillX, scaleX, scaleY]
+    [rawPillX, scaleX, scaleY, stopScaleAnimation]
   );
 
   /**
@@ -557,12 +583,13 @@ export function AppleLiquidTabs<T extends string = string>({
     }
   }, [currentActiveIndex, isMounted, snapToIndex]);
 
-  // 尺寸监听 (ResizeObserver)：当窗口或父容器宽度突变时，重新自适应修正水珠物理坐标
+  // 尺寸监听 (ResizeObserver)：当窗口或父容器宽度突变时，重新自适应修正水珠物理坐标与几何缓存
   React.useEffect(() => {
     if (!innerRef.current) return;
     const observer = new ResizeObserver(() => {
+      const metrics = getMetrics();
       if (!isDraggingRef.current && hasInitializedRef.current) {
-        const { tabWidth } = getMetrics();
+        const { tabWidth } = metrics;
         if (tabWidth > 0) {
           rawPillX.set(currentActiveIndex * tabWidth);
         }
@@ -574,10 +601,6 @@ export function AppleLiquidTabs<T extends string = string>({
 
   /**
    * 📐 getPillXFromPointer: 根据手势绝对位置计算水珠目标 X 坐标（带 iOS 级别物理双曲正切阻尼）
-   * 核心交互法则：
-   * • 水珠中心始终对齐光标：(pointerX - tabWidth / 2)
-   * • 边界橡皮筋阻尼：当拖拽拉出左右边界时，利用 Math.tanh(over / 40) 进行非线性衰减，
-   *   拉得越远阻力越大，最大溢出距离被平滑钳制在 MAX_OVERDRAG 像素以内。
    */
   const getPillXFromPointer = React.useCallback(
     (pointerX: number, tabWidth: number, maxTargetX: number) => {
@@ -597,16 +620,17 @@ export function AppleLiquidTabs<T extends string = string>({
 
   /**
    * 👆 handlePointerDown: 手指/鼠标按下事件（手势启动）
-   * 1. 坐标归一化：通过 getBoundingClientRect() 与 scaleFactor 消除页面缩放/DPI 偏差。
-   * 2. 居中水珠：将水珠中心瞬间瞄准手指落点。
-   * 3. 激活膨胀：立即置 isPressed = true，水珠体积膨胀、顶层高亮文字放大 1.25x。
-   * 4. 水滴拉伸：若落点距离当前水珠较远，触发一次水滴横向拉长、纵向压缩的有机形变。
-   * 5. 原生捕获：调用 setPointerCapture，确保滑出底栏甚至屏幕外时手势依然不丢失。
+   * 1. 刷新几何缓存：单次调用 getMetrics()，拖拽过程中不再读取 DOM。
+   * 2. 居中水珠：将水珠中心瞄准手指落点。
+   * 3. 激活按下状态：置 isPressed = true，水珠体积膨胀、顶层高亮文字放大 1.25x。
+   * 4. 停止并发动画：停止任何正在运行的 scale 动画，防止跟手时产生竞争撕裂。
    */
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
 
-    const { tabWidth, maxTargetX, scaleFactor, innerLeft } = getMetrics();
+    // 一次性测量并更新几何缓存
+    const metrics = getMetrics();
+    const { tabWidth, maxTargetX, scaleFactor, innerLeft } = metrics;
     if (tabWidth <= 0 || !innerRef.current) return;
 
     const mouseX = (e.clientX - innerLeft) / scaleFactor;
@@ -622,17 +646,12 @@ export function AppleLiquidTabs<T extends string = string>({
     lastTimeRef.current = performance.now();
     velocityRef.current = 0;
 
-    // 1. 立即激活按下态（即使尚未移动，水珠立刻膨胀并点亮）
+    // 停止任何正在进行的动画，杜绝与手势竞争
+    stopScaleAnimation();
+
+    // 激活按下状态
     setIsPressed(true);
     setIsDragging(false);
-
-    // 2. 若跨度较大，激发一次流体冲刺形变
-    const currentPillX = springPillX.get();
-    const travelDistance = Math.abs(targetX - currentPillX);
-    if (travelDistance > 8) {
-      animate(scaleX, [1, 1.15, 0.95, 1], { duration: 0.32, ease: "easeOut" });
-      animate(scaleY, [1, 0.88, 1.04, 1], { duration: 0.32, ease: "easeOut" });
-    }
 
     rawPillX.set(targetX);
     setOptimisticIndex(hoveredIndex);
@@ -643,18 +662,16 @@ export function AppleLiquidTabs<T extends string = string>({
   };
 
   /**
-   * 🏃 handlePointerMove: 手指/鼠标滑动跟踪（1:1 零延迟直接跟随 + 速度流体形变）
-   * 1. 1:1 跟随：水珠物理中心无缝锁死在鼠标/手指横坐标上。
-   * 2. 速度计算：利用 performance.now() 和帧间位移精准求导出瞬时速度 velocity (px/ms)。
-   * 3. 有机流体形变 (Organic Stretch & Squash)：
-   *    滑动越快，水珠在运动方向上被拉长 (scaleX > 1)，在垂直方向上被压扁 (scaleY < 1)，
-   *    完美遵循不可压缩流体的质量守恒定律（物理拟真）。
+   * 🏃 handlePointerMove: 手指/鼠标滑动跟踪（1:1 零延迟直接跟手 + 速度流体形变）
+   * 1. 零回流保障：从 metricsRef 读取缓存，绝对不触发布局抖动！
+   * 2. 1:1 即时跟手：拖拽位移触发后通过 springPillX.jump 消除弹簧滤波滞后，水珠精准锁死指尖。
+   * 3. 流体速度形变：随手指瞬时速度轻微拉长 scaleX、压缩 scaleY。
    */
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
 
-    const { tabWidth, maxTargetX, scaleFactor, innerLeft } = getMetrics();
-    if (!innerRef.current || tabWidth <= 0) return;
+    const { tabWidth, maxTargetX, scaleFactor, innerLeft } = metricsRef.current;
+    if (tabWidth <= 0) return;
 
     const rawDx = e.clientX - startXRef.current;
     if (!hasMovedRef.current && Math.abs(rawDx) > 2) {
@@ -674,6 +691,10 @@ export function AppleLiquidTabs<T extends string = string>({
     const targetX = getPillXFromPointer(currentMouseX, tabWidth, maxTargetX);
 
     rawPillX.set(targetX);
+    // 拖拽期间 1:1 即时跟手，消除弹簧滤波造成的滞后与掉帧
+    if (hasMovedRef.current) {
+      springPillX.jump(targetX);
+    }
 
     // 根据瞬时速度计算水珠流体形变系数
     const speed = Math.abs(velocityRef.current);
@@ -684,11 +705,6 @@ export function AppleLiquidTabs<T extends string = string>({
 
   /**
    * 🚀 handlePointerUp: 手势释放/松手结算（物理惯性甩动飞跃 + 弹性吸附 + 状态提交）
-   * 1. 惯性甩动 (Inertia Flick)：根据松手瞬间的瞬时速度 velocity，向前预测落点：
-   *    projectedCenterX = dropletCenterX + velocity * 45
-   *    如果用户做了一个快速“甩动”手势，水珠会顺应动量飞向下一个或下下个 Tab。
-   * 2. 状态退出：置 isPressed/isDragging 为 false，水珠与文字同步弹回标准尺寸。
-   * 3. 释放捕获并执行回调 (onClick, onChange, router.push)。
    */
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
@@ -701,7 +717,7 @@ export function AppleLiquidTabs<T extends string = string>({
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {}
 
-    const { tabWidth } = getMetrics();
+    const { tabWidth } = metricsRef.current;
     if (tabWidth <= 0) return;
 
     const currentPillX = rawPillX.get();
@@ -720,6 +736,13 @@ export function AppleLiquidTabs<T extends string = string>({
 
     const targetItem = items[finalIndex];
     if (targetItem) {
+      // 记录意图锁定，防止快速连续点击时由于旧路由响应较慢冲掉乐观索引导致抽搐
+      pendingTargetIdRef.current = targetItem.id;
+      if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = setTimeout(() => {
+        pendingTargetIdRef.current = null;
+      }, 2500);
+
       if (!isControlled) {
         setInternalValue(targetItem.id);
       }
@@ -741,7 +764,7 @@ export function AppleLiquidTabs<T extends string = string>({
   };
 
   /**
-   * 🚫 handlePointerCancel: 手势被系统异常打断（例如系统来电、手势冲突）
+   * 🚫 handlePointerCancel: 手势被系统异常打断
    */
   const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
@@ -761,8 +784,13 @@ export function AppleLiquidTabs<T extends string = string>({
    */
   const handleTabClick = (e: React.MouseEvent, index: number, item: AppleLiquidTabItem<T>) => {
     e.preventDefault();
-    // detail === 0 代表来自键盘合成的 click 事件，非鼠标指针触发
     if (e.detail === 0) {
+      pendingTargetIdRef.current = item.id;
+      if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+      pendingTimeoutRef.current = setTimeout(() => {
+        pendingTargetIdRef.current = null;
+      }, 2500);
+
       if (!isControlled) {
         setInternalValue(item.id);
       }
