@@ -242,13 +242,13 @@ export function AppleLiquidTabs<T extends string = string>({
   const isDock = variant === "dock" || (variant === undefined && size === "lg");
 
   const config = React.useMemo(() => {
-    // 手机底部 Nav 专用的浅色微灰通透立体微渐变水珠样式（降低灰度，呈现纯净晶透质感）
+    // 手机底部 Nav 专用的高透立体微渐变水珠样式（暗色通透空灵、亮色晶莹洁净，单层发丝级 1px 细边）
     const dockDropletClass =
-      "bg-gradient-to-b from-black/[0.02] via-black/[0.028] to-black/[0.04] dark:from-white/[0.10] dark:via-white/[0.08] dark:to-white/[0.06] backdrop-blur-[12px] border border-black/[0.05] dark:border-white/[0.12] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]";
+      "bg-gradient-to-b from-black/[0.02] via-black/[0.028] to-black/[0.04] dark:from-white/[0.045] dark:via-white/[0.02] dark:to-transparent backdrop-blur-[16px] border border-black/[0.05] dark:border-white/[0.09] shadow-[0_1px_3px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02),inset_0_1px_1px_rgba(255,255,255,0.9)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.16)]";
 
-    // 常规 Tab (Header / Dashboard / Shop) 保持原有纯白磨砂水珠样式
+    // 常规 Tab (Header / Dashboard / Shop) 保持原有高透微磨砂水珠样式
     const standardDropletClass =
-      "bg-white/80 dark:bg-white/[0.08] backdrop-blur-[12px] border border-black/[0.04] dark:border-white/[0.10] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]";
+      "bg-white/80 dark:bg-white/[0.05] backdrop-blur-[12px] border border-black/[0.04] dark:border-white/[0.08] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]";
 
     switch (size) {
       case "lg":
@@ -865,14 +865,14 @@ export function AppleLiquidTabs<T extends string = string>({
             {/* -----------------------------------------------------------------
                 • 10.2.1 弯液面光晕圈 (Curved Light Ray Meniscus Rim)
                 - 利用纯净 CSS border 与双向内发光渲染极细微高光边框 (完全摒弃在 iOS 产生瓦片中轴接缝的 maskComposite: xor)
-                - 静止态微光温润 (opacity 45%)，交互活跃态强烈聚焦反光 (opacity 90%)
+                - 仅在触摸按下/拖拽活跃交互态显露 (opacity 85%)，静止态彻底隐藏 (opacity 0) 避免与本体重叠造成过厚双边框
                 - 严格通过 LIQUID_SPRING 物理弹簧平滑过渡
                 ----------------------------------------------------------------- */}
             <motion.div
               className="absolute -inset-[1px] rounded-full pointer-events-none border border-white/60 dark:border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),inset_0_-1px_1px_rgba(255,255,255,0.15)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.30),inset_0_-1px_1px_rgba(255,255,255,0.08)]"
               initial={false}
               animate={{
-                opacity: isActive ? 0.90 : 0.45,
+                opacity: isActive ? 0.85 : 0,
               }}
               transition={LIQUID_SPRING}
             />
@@ -913,6 +913,9 @@ export function AppleLiquidTabs<T extends string = string>({
                 }}
                 transition={LIQUID_SPRING}
               >
+                {/* 静止态顶部细致高光峰线 (Crisp Resting Top Highlight Crest Line) */}
+                <div className="absolute top-[0.5px] inset-x-3.5 h-[1px] bg-gradient-to-r from-transparent via-white/50 dark:via-white/25 to-transparent pointer-events-none" />
+
                 {/* 静止态顶部柔和微光反光 (采用 rounded-full 全胶囊弧度，消灭平底硬切线) */}
                 <div
                   className={cn(
@@ -923,7 +926,7 @@ export function AppleLiquidTabs<T extends string = string>({
                 {/* 静止态底部微弱漫反射 */}
                 <div
                   className={cn(
-                    "absolute bottom-0.5 inset-x-3 h-[25%] rounded-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/10",
+                    "absolute bottom-0.5 inset-x-3 h-[25%] rounded-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/[0.08]",
                     config.restingCausticClass
                   )}
                 />
