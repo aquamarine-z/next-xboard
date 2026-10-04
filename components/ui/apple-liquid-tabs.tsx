@@ -913,20 +913,18 @@ export function AppleLiquidTabs<T extends string = string>({
                 }}
                 transition={LIQUID_SPRING}
               >
-                {/* 静止态顶部细致高光峰线 (极细微光切面，收敛投射范围) */}
-                <div className="absolute top-[0.5px] inset-x-4 h-[0.75px] bg-gradient-to-r from-transparent via-white/40 dark:via-white/16 to-transparent pointer-events-none" />
-
-                {/* 静止态顶部柔和微光反光 (高度从 40% 缩减至 18%，彻底收敛上下边缘厚度) */}
+                {/* 静止态顶部一体化无缝柔和反光 (从 top-0 顶缘严密贴合向下渐变，彻底消灭脱节黑色空隙) */}
                 <div
                   className={cn(
-                    "absolute inset-x-2.5 top-0.5 h-[18%] rounded-full bg-gradient-to-b from-white/45 via-white/10 to-transparent pointer-events-none dark:from-white/12 dark:via-transparent",
+                    "absolute inset-x-0 top-0 h-[22%] rounded-t-full bg-gradient-to-b from-white/50 via-white/15 to-transparent pointer-events-none dark:from-white/18 dark:via-white/[0.04] dark:to-transparent",
                     config.restingSpecularClass
                   )}
                 />
-                {/* 静止态底部微弱漫反射 (高度从 25% 缩减至 12%，消除底部光晕上侵) */}
+
+                {/* 静止态底部一体化微弱漫反射 (从 bottom-0 底缘严密贴合向上渐变) */}
                 <div
                   className={cn(
-                    "absolute bottom-0.5 inset-x-4 h-[12%] rounded-full bg-gradient-to-t from-white/20 to-transparent pointer-events-none dark:from-white/[0.04]",
+                    "absolute inset-x-0 bottom-0 h-[14%] rounded-b-full bg-gradient-to-t from-white/25 to-transparent pointer-events-none dark:from-white/[0.06] dark:to-transparent",
                     config.restingCausticClass
                   )}
                 />
