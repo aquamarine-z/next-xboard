@@ -56,7 +56,17 @@ export async function generateMetadata({
       telephone: false,
     },
     icons: {
-      icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>",
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon.svg", type: "image/svg+xml" },
+        { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: [
+        { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+        { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      ],
+      shortcut: ["/icons/icon-192x192.png"],
     },
   };
 }
@@ -85,6 +95,8 @@ export default async function RootLayout({
 
   const locale = lang as Locale;
   const dictionary = await getDictionary(locale);
+  const siteMeta = await getXboardSiteMeta();
+  const siteName = siteMeta.title || "Aqua VPS (试运营中)";
 
   return (
     <html
@@ -93,13 +105,16 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
-        <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'/>" />
-        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Aqua VPS" />
+        <meta name="apple-mobile-web-app-title" content={siteName} />
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="min-h-full flex flex-col bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary">
