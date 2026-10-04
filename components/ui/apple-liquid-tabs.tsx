@@ -225,7 +225,7 @@ export function AppleLiquidTabs<T extends string = string>({
         };
       case "md":
         return {
-          restingInset: isDock ? -1.5 : 1,
+          restingInset: -1.5,
           activeOverhang: -8,
           containerClass: "p-1 h-[40px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3.5 text-[12.5px]",
@@ -241,7 +241,7 @@ export function AppleLiquidTabs<T extends string = string>({
       case "sm":
       default:
         return {
-          restingInset: isDock ? -1.5 : 1,
+          restingInset: -1.5,
           activeOverhang: -7.5,
           containerClass: "p-1 h-[36px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3 text-xs",
