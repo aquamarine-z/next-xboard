@@ -38,68 +38,137 @@ const LIQUID_SPRING = {
   mass: 0.6,
 };
 
-interface InactiveTabItemProps<T = string> {
+interface UnifiedTabItemProps<T = string> {
   item: AppleLiquidTabItem<T>;
   index: number;
   totalItems: number;
   springPillX: MotionValue<number>;
+  interactionScale: MotionValue<number>;
+  interactionY: MotionValue<number>;
   innerRef: React.RefObject<HTMLDivElement | null>;
   isMounted: boolean;
   currentActiveIndex: number;
   orientation: "horizontal" | "vertical";
+  activeColor: string;
   config: any;
   tabClassName?: string;
 }
 
-function InactiveTabItem<T = string>({
+function UnifiedTabItem<T = string>({
   item,
   index,
   totalItems,
   springPillX,
+  interactionScale,
+  interactionY,
   innerRef,
   isMounted,
   currentActiveIndex,
   orientation,
+  activeColor,
   config,
   tabClassName,
-}: InactiveTabItemProps<T>) {
+}: UnifiedTabItemProps<T>) {
   const Icon = item.icon;
 
-  // Real-time dynamic opacity:
-  // When the liquid lens covers this item, grey text seamlessly fades to 0 (completely hidden under lens)!
-  // As the lens moves away, grey text smoothly reappears.
-  const opacity = useTransform(springPillX, (x) => {
+  // Real-time dynamic progress (0 = inactive, 1 = active under lens):
+  // When dist <= tabWidth * 0.35: the lens is directly over this item -> progress = 1 (pure blue, exactly 0% grey!)
+  // When dist >= tabWidth * 0.65: the lens has left this item -> progress = 0 (pure grey, exactly 0% blue!)
+  // Between 0.35 and 0.65: smoothstep crossfade over a narrow 30% band
+  const progress = useTransform(springPillX, (x) => {
     if (!isMounted || !innerRef.current) {
-      return index === currentActiveIndex ? 0 : 1;
+      return index === currentActiveIndex ? 1 : 0;
     }
     const w = innerRef.current.offsetWidth;
     const tabWidth = totalItems > 0 ? w / totalItems : 0;
     if (tabWidth <= 0) {
-      return index === currentActiveIndex ? 0 : 1;
+      return index === currentActiveIndex ? 1 : 0;
     }
     const targetX = index * tabWidth;
     const dist = Math.abs(x - targetX);
-    // 0 opacity under lens center; fades back in as lens leaves:
-    return Math.max(0, Math.min(1, (dist - tabWidth * 0.18) / (tabWidth * 0.42)));
+
+    if (dist <= tabWidth * 0.35) return 1;
+    if (dist >= tabWidth * 0.65) return 0;
+
+    const t = (tabWidth * 0.65 - dist) / (tabWidth * 0.30);
+    return t * t * (3 - 2 * t);
   });
+
+  // Scale: 1.0 when inactive -> interactionScale (1.15 or 1.25) when active
+  const scale = useTransform(
+    [progress, interactionScale],
+    ([p, s]: number[]) => 1 + (p ?? 0) * ((s ?? 1.15) - 1)
+  );
+
+  // Y elevation: 0 when inactive -> interactionY (-0.5 or -2) when active
+  const y = useTransform(
+    [progress, interactionY],
+    ([p, yVal]: number[]) => (p ?? 0) * (yVal ?? -0.5)
+  );
+
+  const blueOpacity = progress;
+  const greyOpacity = useTransform(progress, (p) => 1 - p);
 
   return (
     <motion.div
-      style={{ opacity: isMounted ? opacity : (index === currentActiveIndex ? 0 : 1) }}
-      className={cn(
-        "flex items-center justify-center transition-colors select-none font-medium text-muted-foreground hover:text-foreground",
-        orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
-        config.itemClass,
-        tabClassName
-      )}
+      style={{
+        scale: isMounted ? scale : (index === currentActiveIndex ? 1.15 : 1),
+        y: isMounted ? y : (index === currentActiveIndex ? -0.5 : 0),
+      }}
+      className="relative flex items-center justify-center select-none origin-center will-change-transform"
     >
-      {Icon && (
-        <Icon className={cn(config.iconClass, "transition-transform shrink-0 stroke-[1.8] opacity-80")} />
-      )}
-      <span className="truncate whitespace-nowrap">{item.label}</span>
-      {item.badge && (
-        <span className="text-[10px] font-mono opacity-80 shrink-0">{item.badge}</span>
-      )}
+      {/* Inactive State: Muted Grey */}
+      <motion.div
+        style={{
+          opacity: isMounted ? greyOpacity : (index === currentActiveIndex ? 0 : 1),
+        }}
+        className={cn(
+          "flex items-center justify-center font-medium text-muted-foreground hover:text-foreground transition-colors",
+          orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
+          config.itemClass,
+          tabClassName
+        )}
+      >
+        {Icon && (
+          <Icon className={cn(config.iconClass, "transition-transform shrink-0 stroke-[1.8] opacity-80")} />
+        )}
+        <span className="truncate whitespace-nowrap">{item.label}</span>
+        {item.badge && (
+          <span className="text-[10px] font-mono opacity-80 shrink-0">{item.badge}</span>
+        )}
+      </motion.div>
+
+      {/* Active State: Vibrant Apple Blue with Glow (Strict 1:1 Co-located Overlay) */}
+      <motion.div
+        style={{
+          opacity: isMounted ? blueOpacity : (index === currentActiveIndex ? 1 : 0),
+        }}
+        className={cn(
+          "absolute inset-0 flex items-center justify-center font-semibold pointer-events-none select-none",
+          activeColor,
+          orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
+          config.itemClass,
+          tabClassName
+        )}
+      >
+        {Icon && (
+          <Icon
+            className={cn(
+              config.iconClass,
+              "shrink-0 stroke-[2.2] transition-transform",
+              "drop-shadow-[0_1px_5px_rgba(0,113,227,0.45)] dark:drop-shadow-[0_1px_8px_rgba(41,151,255,0.65)]"
+            )}
+          />
+        )}
+        <span className="truncate whitespace-nowrap tracking-tight text-[12px] sm:text-[13px] drop-shadow-[0_1px_4px_rgba(0,113,227,0.30)] dark:drop-shadow-[0_1px_5px_rgba(41,151,255,0.45)]">
+          {item.label}
+        </span>
+        {item.badge && (
+          <span className="text-[10px] font-mono shrink-0 opacity-95">
+            {item.badge}
+          </span>
+        )}
+      </motion.div>
     </motion.div>
   );
 }
@@ -248,34 +317,14 @@ export function AppleLiquidTabs<T extends string = string>({
   const [isMounted, setIsMounted] = React.useState(false);
   const prevActiveIndexRef = React.useRef(currentActiveIndex);
 
-  // Continuous iOS-style optical lens clipping mask:
-  // Dynamically expands during active state, strictly bounded when resting.
-  // Uses exact CSS percentage before layout mount to eliminate any initial jump/flicker!
-  const clipPath = useTransform(
-    [springPillX, scaleX],
-    ([latestX, latestScaleX]: number[]) => {
-      const leftP = (currentActiveIndex * 100) / items.length;
-      const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
-      const vert = isActive ? "-16px" : "-2px";
+  // Unified interaction scale and elevation: smoothly springs between resting and pressed/drag states
+  const interactionScale = useMotionValue(1.15);
+  const interactionY = useMotionValue(-0.5);
 
-      if (!isMounted || !innerRef.current) {
-        return `inset(${vert} ${rightP.toFixed(2)}% ${vert} ${leftP.toFixed(2)}% round 9999px)`;
-      }
-
-      const w = innerRef.current.offsetWidth;
-      if (w <= 0) {
-        return `inset(${vert} ${rightP.toFixed(2)}% ${vert} ${leftP.toFixed(2)}% round 9999px)`;
-      }
-
-      const tabWidth = items.length > 0 ? w / items.length : 0;
-      const center = (latestX ?? 0) + tabWidth / 2;
-      const currentWidth = tabWidth * (latestScaleX ?? 1);
-      const left = Math.max(0, center - currentWidth / 2);
-      const right = Math.max(0, w - (center + currentWidth / 2));
-
-      return `inset(${vert} ${right.toFixed(2)}px ${vert} ${left.toFixed(2)}px round 9999px)`;
-    }
-  );
+  React.useEffect(() => {
+    animate(interactionScale, isActive ? 1.25 : 1.15, LIQUID_SPRING);
+    animate(interactionY, isActive ? -2 : -0.5, LIQUID_SPRING);
+  }, [isActive, interactionScale, interactionY]);
 
   // Snap pill to a specific index with optional liquid wobble (harmonized with LIQUID_SPRING)
   const snapToIndex = React.useCallback(
@@ -671,7 +720,7 @@ export function AppleLiquidTabs<T extends string = string>({
             </div>
           </motion.div>
 
-          {/* Layer 1: Base Inactive Items Grid (Always unselected neutral text, handles interactions) */}
+          {/* Unified Base Items Grid: single-layer rendering completely eliminates double-text ghosting */}
           <div
             className="relative z-[20] grid w-full h-full items-center select-none"
             style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
@@ -691,15 +740,18 @@ export function AppleLiquidTabs<T extends string = string>({
                   className="flex items-center justify-center w-full h-full rounded-full cursor-pointer select-none outline-none [-webkit-touch-callout:none]"
                   style={{ WebkitTouchCallout: "none" }}
                 >
-                  <InactiveTabItem
+                  <UnifiedTabItem
                     item={item}
                     index={index}
                     totalItems={items.length}
                     springPillX={springPillX}
+                    interactionScale={interactionScale}
+                    interactionY={interactionY}
                     innerRef={innerRef}
                     isMounted={isMounted}
                     currentActiveIndex={currentActiveIndex}
                     orientation={orientation}
+                    activeColor={activeColor}
                     config={config}
                     tabClassName={tabClassName}
                   />
@@ -707,67 +759,6 @@ export function AppleLiquidTabs<T extends string = string>({
               );
             })}
           </div>
-
-          {/* Layer 2: Active Masked Reveal Grid (iOS-style dual-layer clipping mask:
-              Only reveals vibrant blue text/icons where the water droplet lens physically covers.
-              Zero background, zero border, zero padding offset - 100% identical geometry to Layer 1) */}
-          <motion.div
-            className="absolute inset-0 z-[25] pointer-events-none select-none overflow-visible"
-            style={{
-              clipPath,
-              WebkitClipPath: clipPath,
-            }}
-            aria-hidden="true"
-          >
-            <div
-              className="grid w-full h-full items-center select-none"
-              style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
-            >
-              {items.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-center w-full h-full rounded-full select-none"
-                  >
-                    <motion.div
-                      animate={{
-                        scale: isActive ? 1.25 : 1.15,
-                        y: isActive ? -2 : -0.5,
-                      }}
-                      transition={LIQUID_SPRING}
-                      className={cn(
-                        "flex items-center justify-center font-semibold select-none origin-center will-change-transform",
-                        activeColor,
-                        orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
-                        config.itemClass,
-                        tabClassName
-                      )}
-                    >
-                      {Icon && (
-                        <Icon
-                          className={cn(
-                            config.iconClass,
-                            "shrink-0 stroke-[2.2] transition-transform",
-                            "drop-shadow-[0_1px_5px_rgba(0,113,227,0.45)] dark:drop-shadow-[0_1px_8px_rgba(41,151,255,0.65)]"
-                          )}
-                        />
-                      )}
-                      <span className="truncate whitespace-nowrap tracking-tight text-[12px] sm:text-[13px] drop-shadow-[0_1px_4px_rgba(0,113,227,0.30)] dark:drop-shadow-[0_1px_5px_rgba(41,151,255,0.45)]">
-                        {item.label}
-                      </span>
-                      {item.badge && (
-                        <span className="text-[10px] font-mono shrink-0 opacity-95">
-                          {item.badge}
-                        </span>
-                      )}
-                    </motion.div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
         </div>
       </motion.div>
     </>
