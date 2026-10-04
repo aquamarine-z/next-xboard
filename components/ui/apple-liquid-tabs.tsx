@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { motion, useMotionValue, useSpring, useTransform, animate } from "motion/react";
+import { motion, useMotionValue, useSpring, useTransform, animate, type MotionValue } from "motion/react";
 import { cn } from "@/lib/utils";
 
 export interface AppleLiquidTabItem<T = string> {
@@ -37,6 +37,72 @@ const LIQUID_SPRING = {
   damping: 28,
   mass: 0.6,
 };
+
+interface InactiveTabItemProps<T = string> {
+  item: AppleLiquidTabItem<T>;
+  index: number;
+  totalItems: number;
+  springPillX: MotionValue<number>;
+  innerRef: React.RefObject<HTMLDivElement | null>;
+  isMounted: boolean;
+  currentActiveIndex: number;
+  orientation: "horizontal" | "vertical";
+  config: any;
+  tabClassName?: string;
+}
+
+function InactiveTabItem<T = string>({
+  item,
+  index,
+  totalItems,
+  springPillX,
+  innerRef,
+  isMounted,
+  currentActiveIndex,
+  orientation,
+  config,
+  tabClassName,
+}: InactiveTabItemProps<T>) {
+  const Icon = item.icon;
+
+  // Real-time dynamic opacity:
+  // When the liquid lens covers this item, grey text seamlessly fades to 0 (completely hidden under lens)!
+  // As the lens moves away, grey text smoothly reappears.
+  const opacity = useTransform(springPillX, (x) => {
+    if (!isMounted || !innerRef.current) {
+      return index === currentActiveIndex ? 0 : 1;
+    }
+    const w = innerRef.current.offsetWidth;
+    const tabWidth = totalItems > 0 ? w / totalItems : 0;
+    if (tabWidth <= 0) {
+      return index === currentActiveIndex ? 0 : 1;
+    }
+    const targetX = index * tabWidth;
+    const dist = Math.abs(x - targetX);
+    // 0 opacity under lens center; fades back in as lens leaves:
+    return Math.max(0, Math.min(1, (dist - tabWidth * 0.18) / (tabWidth * 0.42)));
+  });
+
+  return (
+    <motion.div
+      style={{ opacity: isMounted ? opacity : (index === currentActiveIndex ? 0 : 1) }}
+      className={cn(
+        "flex items-center justify-center transition-colors select-none font-medium text-muted-foreground hover:text-foreground",
+        orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
+        config.itemClass,
+        tabClassName
+      )}
+    >
+      {Icon && (
+        <Icon className={cn(config.iconClass, "transition-transform shrink-0 stroke-[1.8] opacity-80")} />
+      )}
+      <span className="truncate whitespace-nowrap">{item.label}</span>
+      {item.badge && (
+        <span className="text-[10px] font-mono opacity-80 shrink-0">{item.badge}</span>
+      )}
+    </motion.div>
+  );
+}
 
 export function AppleLiquidTabs<T extends string = string>({
   items,
@@ -543,6 +609,23 @@ export function AppleLiquidTabs<T extends string = string>({
               }}
             />
 
+            {/* Chromatic Dispersion Prismatic Fringe (物理色散折射边缘) */}
+            <div
+              className={cn(
+                "absolute -inset-[0.5px] rounded-full pointer-events-none transition-opacity duration-300",
+                isActive ? "opacity-75 dark:opacity-55" : "opacity-0"
+              )}
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(0, 180, 255, 0.40) 0%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 75%, rgba(255, 90, 40, 0.35) 100%)",
+                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                maskComposite: "exclude",
+                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMaskComposite: "xor",
+                padding: "1px",
+              }}
+            />
+
             {/* Droplet Body:
                 Resting: Flatter, refined glass pill, not overly bright/translucent.
                 Active: High-transparency 3D water droplet exceeding bar height. */}
@@ -594,26 +677,6 @@ export function AppleLiquidTabs<T extends string = string>({
             style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
           >
             {items.map((item, index) => {
-              const Icon = item.icon;
-              const content = (
-                <div
-                  className={cn(
-                    "flex items-center justify-center transition-colors select-none font-medium text-muted-foreground hover:text-foreground",
-                    orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
-                    config.itemClass,
-                    tabClassName
-                  )}
-                >
-                  {Icon && (
-                    <Icon className={cn(config.iconClass, "transition-transform shrink-0 stroke-[1.8] opacity-80")} />
-                  )}
-                  <span className="truncate whitespace-nowrap">{item.label}</span>
-                  {item.badge && (
-                    <span className="text-[10px] font-mono opacity-80 shrink-0">{item.badge}</span>
-                  )}
-                </div>
-              );
-
               return (
                 <button
                   key={item.id}
@@ -628,7 +691,18 @@ export function AppleLiquidTabs<T extends string = string>({
                   className="flex items-center justify-center w-full h-full rounded-full cursor-pointer select-none outline-none [-webkit-touch-callout:none]"
                   style={{ WebkitTouchCallout: "none" }}
                 >
-                  {content}
+                  <InactiveTabItem
+                    item={item}
+                    index={index}
+                    totalItems={items.length}
+                    springPillX={springPillX}
+                    innerRef={innerRef}
+                    isMounted={isMounted}
+                    currentActiveIndex={currentActiveIndex}
+                    orientation={orientation}
+                    config={config}
+                    tabClassName={tabClassName}
+                  />
                 </button>
               );
             })}
@@ -657,9 +731,14 @@ export function AppleLiquidTabs<T extends string = string>({
                     key={item.id}
                     className="flex items-center justify-center w-full h-full rounded-full select-none"
                   >
-                    <div
+                    <motion.div
+                      animate={{
+                        scale: isActive ? 1.25 : 1.15,
+                        y: isActive ? -2 : -0.5,
+                      }}
+                      transition={LIQUID_SPRING}
                       className={cn(
-                        "flex items-center justify-center font-medium select-none",
+                        "flex items-center justify-center font-semibold select-none origin-center will-change-transform",
                         activeColor,
                         orientation === "vertical" ? "flex-col justify-center gap-0.5 py-0" : "flex-row gap-1.5",
                         config.itemClass,
@@ -670,12 +749,12 @@ export function AppleLiquidTabs<T extends string = string>({
                         <Icon
                           className={cn(
                             config.iconClass,
-                            "shrink-0 stroke-[2.0]",
-                            "drop-shadow-[0_1px_4px_rgba(0,113,227,0.35)] dark:drop-shadow-[0_1px_6px_rgba(41,151,255,0.50)]"
+                            "shrink-0 stroke-[2.2] transition-transform",
+                            "drop-shadow-[0_1px_5px_rgba(0,113,227,0.45)] dark:drop-shadow-[0_1px_8px_rgba(41,151,255,0.65)]"
                           )}
                         />
                       )}
-                      <span className="truncate whitespace-nowrap drop-shadow-[0_1px_4px_rgba(0,113,227,0.25)] dark:drop-shadow-[0_1px_4px_rgba(41,151,255,0.35)]">
+                      <span className="truncate whitespace-nowrap tracking-tight text-[12px] sm:text-[13px] drop-shadow-[0_1px_4px_rgba(0,113,227,0.30)] dark:drop-shadow-[0_1px_5px_rgba(41,151,255,0.45)]">
                         {item.label}
                       </span>
                       {item.badge && (
@@ -683,7 +762,7 @@ export function AppleLiquidTabs<T extends string = string>({
                           {item.badge}
                         </span>
                       )}
-                    </div>
+                    </motion.div>
                   </div>
                 );
               })}
