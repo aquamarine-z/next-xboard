@@ -190,14 +190,16 @@ export function AppleLiquidTabs<T extends string = string>({
   // 📏 尺寸与样式规格配置 (Sizing Configurations)
   // ---------------------------------------------------------------------------------------
   // 根据 size ("sm" | "md" | "lg") 动态适配内边距、活跃态外溢高度 (overhang)、毛玻璃浓度及阴影
-  // - restingInset: 静止常态下水珠距离轨道内边缘的内缩距离 (如 1px-1.5px)
+  // - restingInset: 静止常态下水珠相对 inner 轨道的内/外缩距离。
+  //   设置为 -1.5px 时，配合容器的 p-1 (4px padding)，使水珠与底栏外边框之间的间隙从约 5px-5.5px
+  //   精确缩减至 2.5px（缩减 50% 留空），使静止态水珠更高更饱满，同时保留精致间隙绝不与边框重合。
   // - activeOverhang: 活跃交互时，水珠向上和向下「暴突/溢出」底栏轨道的距离（负值，如 -7.5px ~ -9px），
   //   形成像真实水滴一样突破表面张力、凸出于导航条上方的立体感！
   const config = React.useMemo(() => {
     switch (size) {
       case "lg":
         return {
-          restingInset: 1.5,
+          restingInset: -1.5,
           activeOverhang: -9,
           containerClass: "p-1 h-[56px] bg-white/75 dark:bg-[#18181c]/80 backdrop-blur-[24px] saturate-[190%] border border-black/[0.08] dark:border-white/[0.14]",
           itemClass: "h-full px-1 text-[11px]",
@@ -209,7 +211,7 @@ export function AppleLiquidTabs<T extends string = string>({
         };
       case "md":
         return {
-          restingInset: 1,
+          restingInset: -1.5,
           activeOverhang: -8,
           containerClass: "p-1 h-[40px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3.5 text-[12.5px]",
@@ -222,7 +224,7 @@ export function AppleLiquidTabs<T extends string = string>({
       case "sm":
       default:
         return {
-          restingInset: 1,
+          restingInset: -1.5,
           activeOverhang: -7.5,
           containerClass: "p-1 h-[36px] bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-[24px] saturate-[180%] border border-black/[0.06] dark:border-white/[0.10]",
           itemClass: "h-full px-3 text-xs",
@@ -278,7 +280,7 @@ export function AppleLiquidTabs<T extends string = string>({
   // =======================================================================================
   // 作用：只让水珠透镜「内部」的这块圆角矩形区域显现出来，水珠外部的所有区域 100% 裁剪隐藏。
   // 语法：CSS inset(top right bottom left round rx)
-  //  - top / bottom: vert (激活态为 -16px 允许膨胀高光溢出，普通态为 -2px)
+  //  - top / bottom: vert (激活态为 -16px 允许膨胀高光溢出，普通态为 -6px 完美容纳加高的静止态水珠)
   //  - left / right: 根据物理弹簧 springPillX 与 scaleX 动态算出的水珠左右像素边界
   //  - round 9999px: 保证裁剪窗口呈现完美的胶囊圆角
   // 容错：在 SSR / 组件未挂载测量之前，使用百分比兜底，彻底消除水珠初始化时的位置跳动闪烁。
@@ -287,7 +289,7 @@ export function AppleLiquidTabs<T extends string = string>({
     ([latestX, latestScaleX]: number[]) => {
       const leftP = (currentActiveIndex * 100) / items.length;
       const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
-      const vert = isActive ? "-16px" : "-2px";
+      const vert = isActive ? "-16px" : "-6px";
 
       if (!isMounted || !innerRef.current) {
         return `inset(${vert} ${rightP.toFixed(2)}% ${vert} ${leftP.toFixed(2)}% round 9999px)`;
@@ -723,12 +725,14 @@ export function AppleLiquidTabs<T extends string = string>({
           >
             {/* 1. 弯液面光晕圈 (Optical Curved Light Ray Meniscus Rim):
                 利用 CSS Mask Composite: exclude 排除技术，用 1.2px 内边距裁剪出超细高光微边框，
-                静止时微光温润 (opacity 35%)，交互激活时强烈聚焦反光 (opacity 90%) */}
-            <div
-              className={cn(
-                "absolute -inset-[1px] rounded-full pointer-events-none transition-opacity duration-200",
-                isActive ? "opacity-90 dark:opacity-85" : "opacity-35 dark:opacity-25"
-              )}
+                静止时微光温润 (opacity 45%)，交互激活时强烈聚焦反光 (opacity 90%)，通过 LIQUID_SPRING 平滑过渡 */}
+            <motion.div
+              className="absolute -inset-[1px] rounded-full pointer-events-none"
+              initial={false}
+              animate={{
+                opacity: isActive ? 0.90 : 0.45,
+              }}
+              transition={LIQUID_SPRING}
               style={{
                 background:
                   "linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.45) 24%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.35) 76%, rgba(255, 255, 255, 0.90) 100%)",
@@ -741,12 +745,14 @@ export function AppleLiquidTabs<T extends string = string>({
             />
 
             {/* 2. 物理色散边缘 (Chromatic Dispersion Prismatic Fringe):
-                模拟不同波长光线折射率差引起的微弱彩虹色散光晕（蓝青色到暖橙色色散），仅在交互活跃态显露 */}
-            <div
-              className={cn(
-                "absolute -inset-[0.5px] rounded-full pointer-events-none transition-opacity duration-300",
-                isActive ? "opacity-75 dark:opacity-55" : "opacity-0"
-              )}
+                模拟不同波长光线折射率差引起的微弱彩虹色散光晕（蓝青色到暖橙色色散），仅在交互活跃态渐变显露 */}
+            <motion.div
+              className="absolute -inset-[0.5px] rounded-full pointer-events-none"
+              initial={false}
+              animate={{
+                opacity: isActive ? 0.75 : 0,
+              }}
+              transition={LIQUID_SPRING}
               style={{
                 background:
                   "linear-gradient(90deg, rgba(0, 180, 255, 0.40) 0%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 75%, rgba(255, 90, 40, 0.35) 100%)",
@@ -758,49 +764,58 @@ export function AppleLiquidTabs<T extends string = string>({
               }}
             />
 
-            {/* 3. 水珠高透本体 (Droplet Body):
-                - 激活态：极高通透度 (bg-white/20)，仅带微弱 2px 透镜模糊与立体高光阴影，
-                  让底层色彩直接透射，呈现通体晶莹的液态玻璃水滴效果。
-                - 静止态：较为平整柔和的细腻毛玻璃 (bg-white/80, blur-12px)。 */}
-            <div
-              className={cn(
-                "relative w-full h-full rounded-full overflow-hidden transition-all duration-200",
-                isActive
-                  ? "bg-white/[0.20] dark:bg-white/[0.05] backdrop-blur-[2px] border border-black/[0.08] dark:border-white/[0.20] shadow-[0_16px_36px_-4px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,0.95),inset_0_-1px_1.5px_rgba(255,255,255,0.35)] dark:shadow-[0_22px_48px_-4px_rgba(0,0,0,0.92),0_8px_20px_rgba(0,0,0,0.72),inset_0_1.5px_2px_rgba(255,255,255,0.40),inset_0_-1px_1px_rgba(255,255,255,0.12)]"
-                  : "bg-white/80 dark:bg-white/[0.08] backdrop-blur-[12px] border border-black/[0.04] dark:border-white/[0.10] shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_2px_rgba(0,0,0,0.03),inset_0_1px_1px_rgba(255,255,255,0.8)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]"
-              )}
-            >
-              {/* 顶部弧面高光聚光带 (Curved Top Specular Arc) */}
-              <div
-                className={cn(
-                  "absolute inset-x-2 top-0.5 h-[45%] rounded-t-full bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/30 dark:via-transparent transition-opacity duration-200",
-                  isActive ? "opacity-100" : "opacity-30"
-                )}
-              />
+            {/* 3. 水珠本体容器 (Droplet Body Container):
+                采用双层交叉淡入淡出（Cross-Fade）渐变动效架构，完美避免 CSS 类名切换导致的阴影/滤镜突变，
+                严格共享 LIQUID_SPRING 物理弹簧，带来 100% 丝滑连续的有机液体渐变过渡体验！ */}
+            <div className="relative w-full h-full rounded-full overflow-hidden">
+              {/* -----------------------------------------------------------------
+                  【静止态水珠外观 (Resting State)】
+                  - Light 模式下呈现微灰烟熏质感渐变 (from-black/[0.05] via-black/[0.065] to-black/[0.085])，
+                    解决纯白底栏上白色水珠不够明显的对比度痛点；Dark 模式维持优雅深邃微光。
+                  - 配合 12px 毛玻璃、内嵌 1px 高光与柔和微阴影，呈现温润的实体玻璃胶囊质感。
+                  - 随 isActive 渐变淡出 (opacity: 0)，松手时渐变淡入 (opacity: 1)。
+                  ----------------------------------------------------------------- */}
+              <motion.div
+                className="absolute inset-0 rounded-full overflow-hidden bg-gradient-to-b from-black/[0.05] via-black/[0.065] to-black/[0.085] dark:from-white/[0.10] dark:via-white/[0.08] dark:to-white/[0.06] backdrop-blur-[12px] border border-black/[0.08] dark:border-white/[0.12] shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_1px_rgba(255,255,255,0.7)] dark:shadow-[0_2px_6px_rgba(0,0,0,0.4),inset_0_1px_1px_rgba(255,255,255,0.12)]"
+                initial={false}
+                animate={{
+                  opacity: isActive ? 0 : 1,
+                }}
+                transition={LIQUID_SPRING}
+              >
+                {/* 静止态顶部柔和微光反光 */}
+                <div className="absolute inset-x-2 top-0.5 h-[40%] rounded-t-full bg-gradient-to-b from-white/60 via-white/10 to-transparent pointer-events-none dark:from-white/20 dark:via-transparent opacity-40" />
+                {/* 静止态底部微弱漫反射 */}
+                <div className="absolute bottom-0 inset-x-3 h-[25%] rounded-b-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/10 opacity-30" />
+              </motion.div>
 
-              {/* 顶部极细高光折射峰线 (Crisp Top Specular Crest Line) */}
-              <div
-                className={cn(
-                  "absolute top-[1px] inset-x-3.5 h-[1px] bg-gradient-to-r from-transparent via-white/90 dark:via-white/60 to-transparent pointer-events-none transition-opacity duration-200",
-                  isActive ? "opacity-100" : "opacity-25"
-                )}
-              />
+              {/* -----------------------------------------------------------------
+                  【活跃态水珠外观 (Active State)】
+                  - 真实 iOS 27 高透 3D 凸面水珠本体：保持不变，极高通透度 (bg-white/20)、
+                    2px 轻微透镜折射模糊、深邃立体落影与双向高光。
+                  - 包含 3D 弧面聚光弧、顶部峰线高光、底部焦散聚集弧与边缘反弹线。
+                  - 随 isActive 渐变淡入 (opacity: 1)，松手时平滑淡出 (opacity: 0)。
+                  ----------------------------------------------------------------- */}
+              <motion.div
+                className="absolute inset-0 rounded-full overflow-hidden bg-white/[0.20] dark:bg-white/[0.05] backdrop-blur-[2px] border border-black/[0.08] dark:border-white/[0.20] shadow-[0_16px_36px_-4px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,0.95),inset_0_-1px_1.5px_rgba(255,255,255,0.35)] dark:shadow-[0_22px_48px_-4px_rgba(0,0,0,0.92),0_8px_20px_rgba(0,0,0,0.72),inset_0_1.5px_2px_rgba(255,255,255,0.40),inset_0_-1px_1px_rgba(255,255,255,0.12)]"
+                initial={false}
+                animate={{
+                  opacity: isActive ? 1 : 0,
+                }}
+                transition={LIQUID_SPRING}
+              >
+                {/* 顶部弧面高光聚光带 (Curved Top Specular Arc) */}
+                <div className="absolute inset-x-2 top-0.5 h-[45%] rounded-t-full bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/30 dark:via-transparent opacity-100" />
 
-              {/* 底部焦散聚集弧 (Bottom Caustic Reflection Arc) */}
-              <div
-                className={cn(
-                  "absolute bottom-0 inset-x-2.5 h-[32%] rounded-b-full bg-gradient-to-t from-white/40 via-transparent to-transparent pointer-events-none dark:from-white/15 transition-opacity duration-200",
-                  isActive ? "opacity-100" : "opacity-20"
-                )}
-              />
+                {/* 顶部极细高光折射峰线 (Crisp Top Specular Crest Line) */}
+                <div className="absolute top-[1px] inset-x-3.5 h-[1px] bg-gradient-to-r from-transparent via-white/90 dark:via-white/60 to-transparent pointer-events-none opacity-100" />
 
-              {/* 底部极细边缘微光 (Crisp Bottom Rim Line) */}
-              <div
-                className={cn(
-                  "absolute bottom-[1px] inset-x-4 h-[1px] bg-gradient-to-r from-transparent via-white/60 dark:via-white/30 to-transparent pointer-events-none transition-opacity duration-200",
-                  isActive ? "opacity-100" : "opacity-20"
-                )}
-              />
+                {/* 底部焦散聚集弧 (Bottom Caustic Reflection Arc) */}
+                <div className="absolute bottom-0 inset-x-2.5 h-[32%] rounded-b-full bg-gradient-to-t from-white/40 via-transparent to-transparent pointer-events-none dark:from-white/15 opacity-100" />
+
+                {/* 底部极细边缘微光 (Crisp Bottom Rim Line) */}
+                <div className="absolute bottom-[1px] inset-x-4 h-[1px] bg-gradient-to-r from-transparent via-white/60 dark:via-white/30 to-transparent pointer-events-none opacity-100" />
+              </motion.div>
             </div>
           </motion.div>
 
