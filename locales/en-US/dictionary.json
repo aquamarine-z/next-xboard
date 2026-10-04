@@ -250,8 +250,8 @@
   "orders": {
     "title": "My Orders",
     "subtitle": "View and manage all your subscription orders and billing history",
-    "tab_plans": "Browse Plans",
-    "tab_orders": "My Orders",
+    "tab_plans": "Plans",
+    "tab_orders": "Orders",
     "order_no": "Order No",
     "period": "Billing Cycle",
     "amount": "Order Amount",
