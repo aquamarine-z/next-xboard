@@ -842,26 +842,17 @@ export function AppleLiquidTabs<T extends string = string>({
           >
             {/* -----------------------------------------------------------------
                 • 10.2.1 弯液面光晕圈 (Curved Light Ray Meniscus Rim)
-                - 利用 CSS Mask Composite: exclude 排除技术裁剪出 1.2px 极细微高光边框
+                - 利用纯净 CSS border 与双向内发光渲染极细微高光边框 (完全摒弃在 iOS 产生瓦片中轴接缝的 maskComposite: xor)
                 - 静止态微光温润 (opacity 45%)，交互活跃态强烈聚焦反光 (opacity 90%)
                 - 严格通过 LIQUID_SPRING 物理弹簧平滑过渡
                 ----------------------------------------------------------------- */}
             <motion.div
-              className="absolute -inset-[1px] rounded-full pointer-events-none"
+              className="absolute -inset-[1px] rounded-full pointer-events-none border border-white/60 dark:border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.7),inset_0_-1px_1px_rgba(255,255,255,0.15)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.30),inset_0_-1px_1px_rgba(255,255,255,0.08)]"
               initial={false}
               animate={{
                 opacity: isActive ? 0.90 : 0.45,
               }}
               transition={LIQUID_SPRING}
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.45) 24%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.35) 76%, rgba(255, 255, 255, 0.90) 100%)",
-                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                maskComposite: "exclude",
-                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                WebkitMaskComposite: "xor",
-                padding: "1.2px",
-              }}
             />
 
             {/* -----------------------------------------------------------------
@@ -870,21 +861,12 @@ export function AppleLiquidTabs<T extends string = string>({
                 - 仅在触摸按下/拖拽活跃态渐变显露 (opacity: 0 -> 0.75)
                 ----------------------------------------------------------------- */}
             <motion.div
-              className="absolute -inset-[0.5px] rounded-full pointer-events-none"
+              className="absolute -inset-[0.5px] rounded-full pointer-events-none border border-sky-400/30 dark:border-sky-400/20 shadow-[0_0_6px_rgba(0,180,255,0.25)]"
               initial={false}
               animate={{
                 opacity: isActive ? 0.75 : 0,
               }}
               transition={LIQUID_SPRING}
-              style={{
-                background:
-                  "linear-gradient(90deg, rgba(0, 180, 255, 0.40) 0%, rgba(255, 255, 255, 0) 25%, rgba(255, 255, 255, 0) 75%, rgba(255, 90, 40, 0.35) 100%)",
-                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                maskComposite: "exclude",
-                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                WebkitMaskComposite: "xor",
-                padding: "1px",
-              }}
             />
 
             {/* -----------------------------------------------------------------
@@ -909,17 +891,17 @@ export function AppleLiquidTabs<T extends string = string>({
                 }}
                 transition={LIQUID_SPRING}
               >
-                {/* 静止态顶部柔和微光反光 */}
+                {/* 静止态顶部柔和微光反光 (采用 rounded-full 全胶囊弧度，消灭平底硬切线) */}
                 <div
                   className={cn(
-                    "absolute inset-x-2 top-0.5 h-[40%] rounded-t-full bg-gradient-to-b from-white/60 via-white/10 to-transparent pointer-events-none dark:from-white/20 dark:via-transparent",
+                    "absolute inset-x-2 top-0.5 h-[40%] rounded-full bg-gradient-to-b from-white/60 via-white/10 to-transparent pointer-events-none dark:from-white/20 dark:via-transparent",
                     config.restingSpecularClass
                   )}
                 />
                 {/* 静止态底部微弱漫反射 */}
                 <div
                   className={cn(
-                    "absolute bottom-0 inset-x-3 h-[25%] rounded-b-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/10",
+                    "absolute bottom-0.5 inset-x-3 h-[25%] rounded-full bg-gradient-to-t from-white/30 to-transparent pointer-events-none dark:from-white/10",
                     config.restingCausticClass
                   )}
                 />
@@ -939,13 +921,13 @@ export function AppleLiquidTabs<T extends string = string>({
                 transition={LIQUID_SPRING}
               >
                 {/* 顶部弧面高光聚光带 (Curved Top Specular Arc) */}
-                <div className="absolute inset-x-2 top-0.5 h-[45%] rounded-t-full bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/30 dark:via-transparent opacity-100" />
+                <div className="absolute inset-x-2 top-0.5 h-[45%] rounded-full bg-gradient-to-b from-white/70 via-white/10 to-transparent pointer-events-none dark:from-white/30 dark:via-transparent opacity-100" />
 
                 {/* 顶部极细高光折射峰线 (Crisp Top Specular Crest Line) */}
                 <div className="absolute top-[1px] inset-x-3.5 h-[1px] bg-gradient-to-r from-transparent via-white/90 dark:via-white/60 to-transparent pointer-events-none opacity-100" />
 
                 {/* 底部焦散聚集弧 (Bottom Caustic Reflection Arc) */}
-                <div className="absolute bottom-0 inset-x-2.5 h-[32%] rounded-b-full bg-gradient-to-t from-white/40 via-transparent to-transparent pointer-events-none dark:from-white/15 opacity-100" />
+                <div className="absolute bottom-0.5 inset-x-2.5 h-[32%] rounded-full bg-gradient-to-t from-white/40 via-transparent to-transparent pointer-events-none dark:from-white/15 opacity-100" />
 
                 {/* 底部极细边缘微光 (Crisp Bottom Rim Line) */}
                 <div className="absolute bottom-[1px] inset-x-4 h-[1px] bg-gradient-to-r from-transparent via-white/60 dark:via-white/30 to-transparent pointer-events-none opacity-100" />
