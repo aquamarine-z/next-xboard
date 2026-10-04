@@ -296,28 +296,25 @@ export function AppleLiquidTabs<T extends string = string>({
   const prevActiveIndexRef = React.useRef(currentActiveIndex);
 
   // =======================================================================================
-  // 🔍【裁剪层 1】clipPathActive: 顶层蓝色文字的显露窗口（正向裁剪）
+  // 🔍【裁剪层 1】clipPathActive: 顶层蓝色文字的显露窗口（正向胶囊裁剪）
   // =======================================================================================
-  // 作用：只让水珠透镜「内部」的这块圆角矩形区域显现出来，水珠外部的所有区域 100% 裁剪隐藏。
-  // 语法：CSS inset(top right bottom left round rx)
-  //  - top / bottom: vert (激活态为 -16px 允许膨胀高光溢出，普通态为 -6px 完美容纳加高的静止态水珠)
-  //  - left / right: 根据物理弹簧 springPillX 与 scaleX 动态算出的水珠左右像素边界
-  //  - round 9999px: 保证裁剪窗口呈现完美的胶囊圆角
-  // 容错：在 SSR / 组件未挂载测量之前，使用百分比兜底，彻底消除水珠初始化时的位置跳动闪烁。
+  // 作用：只让水珠透镜内部的圆角胶囊区域显露，外部区域 100% 裁剪隐藏。
+  // 几何对齐：边界 top/bottom 严格取 topOffset，与物理水珠 pillRef 及底层打孔完全一致！
+  // 亚像素补偿：左右各施加 0.75px 膨胀缓冲 (Dilation Buffer)，彻底消灭 GPU 抗锯齿接缝漏底。
   const clipPathActive = useTransform(
     [springPillX, scaleX],
     ([latestX, latestScaleX]: number[]) => {
+      const topOffset = isActive ? config.activeOverhang : config.restingInset;
       const leftP = (currentActiveIndex * 100) / items.length;
       const rightP = ((items.length - 1 - currentActiveIndex) * 100) / items.length;
-      const vert = isActive ? "-16px" : "-6px";
 
       if (!isMounted || !innerRef.current) {
-        return `inset(${vert} ${rightP.toFixed(2)}% ${vert} ${leftP.toFixed(2)}% round 9999px)`;
+        return `inset(${topOffset.toFixed(2)}px ${rightP.toFixed(2)}% ${topOffset.toFixed(2)}px ${leftP.toFixed(2)}% round 9999px)`;
       }
 
       const w = innerRef.current.offsetWidth;
       if (w <= 0) {
-        return `inset(${vert} ${rightP.toFixed(2)}% ${vert} ${leftP.toFixed(2)}% round 9999px)`;
+        return `inset(${topOffset.toFixed(2)}px ${rightP.toFixed(2)}% ${topOffset.toFixed(2)}px ${leftP.toFixed(2)}% round 9999px)`;
       }
 
       const tabWidth = items.length > 0 ? w / items.length : 0;
@@ -326,29 +323,26 @@ export function AppleLiquidTabs<T extends string = string>({
       const left = Math.max(0, center - currentWidth / 2);
       const right = Math.min(w, center + currentWidth / 2);
 
-      return `inset(${vert} ${(w - right).toFixed(2)}px ${vert} ${left.toFixed(2)}px round 9999px)`;
+      // 施加 0.75px 亚像素膨胀缓冲，紧密咬合底层多边形切口，杜绝发丝细缝
+      const activeLeft = Math.max(0, left - 0.75);
+      const activeRight = Math.min(w, right + 0.75);
+
+      return `inset(${topOffset.toFixed(2)}px ${(w - activeRight).toFixed(2)}px ${topOffset.toFixed(2)}px ${activeLeft.toFixed(2)}px round 9999px)`;
     }
   );
 
   // =======================================================================================
-  // 🕳️【裁剪层 2】clipPathInactive: 底层灰色文字的反向挖空多边形（甚至被称为 Donut Hole）
+  // 🕳️【裁剪层 2】clipPathInactive: 底层灰色文字的圆角胶囊反向打孔（Capsule Donut Hole）
   // =======================================================================================
-  // 作用：让底层灰色文字在水珠「外部」正常显示，唯独在水珠透镜的 [left, right] 区域挖出一个透明空洞！
-  // 为什么普通的 CSS 无法反向挖洞？
-  //  - CSS clip-path 默认只有 inset()、circle()，它们是正向保留图形，无法做“差集挖孔”。
-  //  - 若使用 CSS mask 配合 -webkit-mask-composite，移动端（iOS Safari）会触发惨烈的重绘卡顿。
-  //
-  // 核心数学：利用 W3C 标准的 polygon(evenodd, ...) 奇偶环绕填充规则（若尔当曲线定理）：
-  //  - 想象一根画笔在画布上全程不抬笔，一口气画出 10 个坐标点：
-  //    1.【外圈 5 个点】：顺时针画满整个底栏 (0% 0% -> 100% 0% -> 100% 100% -> 0% 100% -> 0% 0%)
-  //    2.【内圈 5 个点】：从起点不抬笔直接切入水珠当前位置 (left 0% -> left 100% -> right 100% -> right 0% -> left 0%)
-  //
-  // 显卡（GPU）射线判定（Ray Casting）：
-  //  - 任意像素点朝外发射射线：
-  //    • 水珠外部的文字：射线只穿过 1 条外框边线（奇数 1） => 【填充可见，渲染灰色文字】
-  //    • 水珠内部的文字：射线穿过内框边线 + 外框边线（偶数 2）=> 【判定为洞，100% 物理掏空剔除】
-  //
-  // 收益：零性能损耗（GPU 纯硬件光栅化），每一帧随弹簧移动，水珠下绝无半点灰色残影！
+  // 突破性升级：告别旧版平直矩形直角切刀，改用高密度圆弧采样的「真实圆角胶囊多边形」！
+  // 核心数学算法：
+  // 1. 外圈 5 点顺时针包围整条导航栏 (0% 0% -> 100% 0% -> 100% 100% -> 0% 100% -> 0% 0%)
+  // 2. 内圈利用正弦/余弦三角函数沿半径 r 采样左、右两个半圆弧（各采样 8 个平滑顶点）：
+  //    - 顶部水平切线：(cxLeft, yTop) -> (cxRight, yTop)
+  //    - 右半圆弧：theta 从 -90° 到 +90° 平滑弯曲向下
+  //    - 底部水平切线：(cxRight, yBottom) -> (cxLeft, yBottom)
+  //    - 左半圆弧：theta 从 +90° 到 +270° 平滑弯曲向上回到起点
+  // 3. 几何完全贴合：高度、上下边距、圆角曲率与物理水珠及顶层透镜 100% 同构，彻底消灭直边与圆角脱节漏缝！
   const clipPathInactive = useTransform(
     [springPillX, scaleX],
     ([latestX, latestScaleX]: number[]) => {
@@ -361,7 +355,8 @@ export function AppleLiquidTabs<T extends string = string>({
       }
 
       const w = innerRef.current.offsetWidth;
-      if (w <= 0) {
+      const h = innerRef.current.offsetHeight;
+      if (w <= 0 || h <= 0) {
         return `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${leftP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 100%, ${rightSideP.toFixed(2)}% 0%, ${leftP.toFixed(2)}% 0%)`;
       }
 
@@ -371,7 +366,50 @@ export function AppleLiquidTabs<T extends string = string>({
       const left = Math.max(0, center - currentWidth / 2);
       const right = Math.min(w, center + currentWidth / 2);
 
-      return `polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, ${left.toFixed(2)}px 0%, ${left.toFixed(2)}px 100%, ${right.toFixed(2)}px 100%, ${right.toFixed(2)}px 0%, ${left.toFixed(2)}px 0%)`;
+      // 提取水珠垂直物理边界
+      const topOffset = isActive ? config.activeOverhang : config.restingInset;
+      const yTop = topOffset;
+      const yBottom = h - topOffset;
+      const pillHeight = Math.max(1, yBottom - yTop);
+      const centerY = h / 2;
+
+      // 计算胶囊半圆半径与左右圆心
+      const r = Math.min(pillHeight / 2, Math.max(0, (right - left) / 2));
+      const cxLeft = left + r;
+      const cxRight = Math.max(cxLeft, right - r);
+
+      const points: string[] = [
+        "0% 0%", "100% 0%", "100% 100%", "0% 100%", "0% 0%",
+      ];
+
+      // 内圈胶囊切口：从左上切点开始
+      points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
+      points.push(`${cxRight.toFixed(2)}px ${yTop.toFixed(2)}px`);
+
+      // 右半圆弧采样 (8 个平滑分段)
+      const N = 8;
+      for (let i = 1; i <= N; i++) {
+        const theta = -Math.PI / 2 + (Math.PI * i) / N;
+        const x = cxRight + r * Math.cos(theta);
+        const y = centerY + r * Math.sin(theta);
+        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
+      }
+
+      // 底部水平切线
+      points.push(`${cxLeft.toFixed(2)}px ${yBottom.toFixed(2)}px`);
+
+      // 左半圆弧采样 (8 个平滑分段)
+      for (let i = 1; i <= N; i++) {
+        const theta = Math.PI / 2 + (Math.PI * i) / N;
+        const x = cxLeft + r * Math.cos(theta);
+        const y = centerY + r * Math.sin(theta);
+        points.push(`${x.toFixed(2)}px ${y.toFixed(2)}px`);
+      }
+
+      // 闭合胶囊回路
+      points.push(`${cxLeft.toFixed(2)}px ${yTop.toFixed(2)}px`);
+
+      return `polygon(evenodd, ${points.join(", ")})`;
     }
   );
 
