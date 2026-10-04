@@ -5,33 +5,61 @@ import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useSpring, useTransform, animate, type MotionValue } from "motion/react";
 import { cn } from "@/lib/utils";
 
+/* =========================================================================
+ * 📦 01. 类型定义 (TypeScript Interfaces)
+ * ========================================================================= */
+
+/** 单个 Tab 项数据结构 */
 export interface AppleLiquidTabItem<T = string> {
+  /** Tab 唯一标识符 */
   id: T;
+  /** 文本标签或 React 节点 */
   label: React.ReactNode;
+  /** 可选图标组件 (Lucide 图标等) */
   icon?: React.ComponentType<{ className?: string }>;
+  /** 可选状态角标 (如数字、小红点) */
   badge?: React.ReactNode;
+  /** 关联路由链接 (isRouteNav 模式生效) */
   href?: string;
+  /** 点击时的自定义回调函数 */
   onClick?: () => void;
 }
 
+/** AppleLiquidTabs 核心组件属性 */
 export interface AppleLiquidTabsProps<T = string> {
+  /** Tab 选项列表 */
   items: AppleLiquidTabItem<T>[];
+  /** 当前选中的 Tab ID（受控模式） */
   value?: T;
+  /** 初始选中的 Tab ID（非受控模式） */
   defaultValue?: T;
+  /** 选中项切换时的回调函数 */
   onChange?: (value: T) => void;
+  /** 是否启用 Next.js 路由自动预加载与跳转 */
   isRouteNav?: boolean;
+  /** 尺寸规格：sm (36px) | md (40px) | lg (56px) */
   size?: "sm" | "md" | "lg";
+  /** 排布方向：horizontal (横向) | vertical (纵向) */
   orientation?: "horizontal" | "vertical";
+  /** 外层底栏容器扩展样式 */
   className?: string;
+  /** 单个 Tab 项扩展样式 */
   tabClassName?: string;
+  /** 激活状态文字与发光阴影的主题色 */
   activeColor?: string;
+  /** 拖拽活跃时底栏是否整体向上悬浮提拔 */
   elevateOnDrag?: boolean;
+  /** 视觉变体：default (常规白底磨砂) | dock (手机底部浅烟熏微灰) */
   variant?: "default" | "dock";
 }
 
+/* =========================================================================
+ * ⚙️ 02. 物理常数与弹簧曲线 (Physics Constants & Springs)
+ * ========================================================================= */
+
 /**
  * 拖拽到达底栏两端时的最大橡皮筋阻尼溢出距离（像素）。
- * 采用双曲正切函数 Math.tanh(over / 40) 模拟物理弹簧弹性形变，手感类似 iOS 系统级阻尼。
+ * 采用双曲正切函数 Math.tanh(over / 40) 进行非线性衰减，还原 iOS 系统级平滑阻尼感。
  */
 const MAX_OVERDRAG = 24;
 
@@ -39,15 +67,14 @@ const MAX_OVERDRAG = 24;
  * 统一液态玻璃弹簧物理参数 (Unified Liquid Spring Physics)
  * -------------------------------------------------------------------------
  * 关键设计原则：
- * 所有参与水珠交互的属性（水珠 X 轴位移、水平拉伸 scaleX/scaleY、垂直膨胀 overhang、
+ * 所有参与水珠交互的属性（X 轴位移、水平拉伸 scaleX/scaleY、垂直外溢 overhang、
  * 底栏整体浮起高度 y、以及顶层文字放大 scale）必须严格共享这组物理曲线！
  *
- * 这样可以杜绝“水珠已经停下了，文字还在继续放大”或“水珠还没缩回，文字先变小了”的脱节异步感，
- * 带来真正如同整块水滴凝胶在物理世界中受力受阻的 60fps 丝滑有机生命力 (Organic Buttery Feel)。
+ * 彻底消除异步脱节，呈现犹如一整块物理水滴凝胶在受力受阻时的 60fps 丝滑有机生命力。
  *
- * - stiffness (刚度 440): 响应迅捷，跟随手指无粘滞感
- * - damping (阻尼 28): 临界阻尼附近略带微小回弹，呈现液体微波果冻感
- * - mass (质量 0.6): 赋予水珠适度的物理惯性
+ * • stiffness (刚度 440): 响应迅捷，跟随手指无粘滞感
+ * • damping   (阻尼 28):  临界阻尼附近带有微小回弹，呈现液体微波果冻感
+ * • mass      (质量 0.6): 赋予水珠适度的物理惯性
  */
 const LIQUID_SPRING = {
   type: "spring" as const,
@@ -56,16 +83,20 @@ const LIQUID_SPRING = {
   mass: 0.6,
 };
 
+/* =========================================================================
+ * 🌊 03. 核心组件与光学原理 (Core Component & Optical Architecture)
+ * ========================================================================= */
+
 /**
  * =========================================================================================
  * 🌊 AppleLiquidTabs (iOS 27 真实高透液态玻璃水珠光学透镜导航栏)
  * =========================================================================================
  *
- * 📖【架构设计原理与心智模型】
+ * 📖【架构设计原理与心智模型 (Mental Model)】
  * -----------------------------------------------------------------------------------------
  * 1. 传统分段控制器 (UISegmentedControl) 的失效：
  *    - 传统 Tab 的高亮滑块是「实心不透明白色」，滑块盖在底层文字上方，物理上遮蔽了底层灰色字。
- *    - 当用户要求「iOS 27 高透水珠（透明度 80%，带毛玻璃与高光）」时，滑块变得通透，底层灰色字
+ *    - 当设计要求「iOS 27 高透水珠（透明度 80%，带毛玻璃与高光）」时，滑块变得通透，底层灰色字
  *      直接穿透显露。如果顶层高亮字被透镜放大 (1.25x)，就会看到「底层灰色小字套在顶层蓝色大字底下」
  *      的重叠重影灾难。
  *
@@ -82,7 +113,7 @@ const LIQUID_SPRING = {
  *    │  • 承载内容：整条导航栏所有 Tab 的灰色文字与图标 (标准尺寸 scale 1.0)   │
  *    │  • 裁切算法：clipPathInactive (利用 CSS polygon(evenodd, ...) 奇偶打孔) │
  *    │  • 几何表现：外圈 100% 完整显示，唯独在水珠覆盖的 [left, right] 这一段     │
- *    │              被物理掏出一个 100% 透明的空洞！底层灰色字在此处 0% 存在！│
+ *    │              被物理掏出一个 100% 透明的圆角胶囊中空切口！灰色字 0% 存在！│
  *    ├────────────────────────────────────────────────────────────────────────┤
  *    │ 【Layer 2: 顶层蓝色透镜层】(Z-25)                                      │
  *    │  • 承载内容：整条导航栏所有 Tab 的蓝色文字与发光阴影                   │
@@ -116,9 +147,11 @@ export function AppleLiquidTabs<T extends string = string>({
 }: AppleLiquidTabsProps<T>) {
   const router = useRouter();
 
-  // ---------------------------------------------------------------------------------------
-  // 1. 状态管理：同时支持受控模式 (Controlled) 与非受控模式 (Uncontrolled)
-  // ---------------------------------------------------------------------------------------
+  /* -------------------------------------------------------------------------
+   * • 04. 响应式状态机与路由感知 (State Machine & Route Handling)
+   * ------------------------------------------------------------------------- */
+
+  // 1. 受控模式 (Controlled) 与非受控模式 (Uncontrolled) 状态双轨支持
   const isControlled = value !== undefined;
   const [internalValue, setInternalValue] = React.useState<T>(
     value ?? defaultValue ?? items[0]?.id
@@ -130,24 +163,31 @@ export function AppleLiquidTabs<T extends string = string>({
     items.findIndex((item) => item.id === activeId)
   );
 
-  // 乐观索引 (optimisticIndex)：
-  // 手势拖拽或触摸点击时，即使父级路由尚未完成异步页面跳转，UI 水珠也立即先吸附到手势目标 Tab。
-  // 彻底消除网络或路由延迟带来的视觉卡顿感，实现 0ms 原生触控响应。
+  /**
+   * 2. 乐观索引 (Optimistic Index)：
+   *    手势拖拽或触摸点击时，即使父级路由尚未完成异步页面跳转，UI 水珠也立即先吸附到手势目标 Tab。
+   *    彻底消除网络或路由延迟带来的视觉卡顿感，实现 0ms 原生触控响应。
+   */
   const [optimisticIndex, setOptimisticIndex] = React.useState<number | null>(null);
 
-  // 手势交互状态机：
-  // - isDragging: 触摸或鼠标按下并在水平轴上位移超过 2px，进入持续拖拽跟随模式
-  // - isPressed:  按下的瞬间立即为 true（即使尚未移动），用于触发水珠膨胀与文字放大
+  /**
+   * 3. 手势交互状态机：
+   *    • isDragging: 触摸或鼠标按下并在水平轴上位移超过 2px，进入持续拖拽跟随模式
+   *    • isPressed:  按下的瞬间立即为 true（即使尚未移动），用于触发水珠膨胀与文字放大
+   */
   const [isDragging, setIsDragging] = React.useState(false);
   const [isPressed, setIsPressed] = React.useState(false);
 
-  // 当外部通过 props 改变 value（例如浏览器前进/后退、父组件重置状态）时，同步重置乐观索引
+  // 外部 Props 变化时（如浏览器前进/后退、父组件重置状态），同步清空乐观索引
   React.useEffect(() => {
     setOptimisticIndex(null);
   }, [value]);
 
-  // 后台预加载路由 (Next.js Link Prefetching)：
-  // 若作为底层路由导航栏 (isRouteNav=true)，后台静默预取所有页面，实现 Native App 般零秒秒开体验。
+  /**
+   * 4. 路由静默预加载 (Next.js Link Prefetching)：
+   *    若作为底层路由导航栏 (isRouteNav=true)，后台静默预取所有 Tab 关联的 href，
+   *    实现类似原生 Native iOS App 般的 0 秒秒开体验。
+   */
   React.useEffect(() => {
     if (isRouteNav) {
       items.forEach((item) => {
@@ -160,42 +200,45 @@ export function AppleLiquidTabs<T extends string = string>({
     }
   }, [isRouteNav, items, router]);
 
-  // ---------------------------------------------------------------------------------------
-  // ⚡ 核心交互状态 (isActive):
-  // ---------------------------------------------------------------------------------------
-  // 只要处于触摸按下 (isPressed) 或拖拽中 (isDragging) 任意一种状态，即视为活跃交互态：
-  // 1. 水珠物理实体向上和向下膨胀溢出底栏 (activeOverhang)
-  // 2. 顶层蓝色高亮文字被透镜光学放大至 1.25x (scale: 1.25, y: -2px)
-  // 3. 一旦松手释放，所有属性在 LIQUID_SPRING 的同一曲线驱动下毫秒级平滑同步回归常态！
+  /**
+   * 5. 核心交互状态 (isActive)：
+   *    只要处于触摸按下 (isPressed) 或拖拽中 (isDragging) 任意一种状态，即视为活跃交互态：
+   *    • 水珠物理实体向上和向下膨胀溢出底栏 (activeOverhang)
+   *    • 顶层蓝色高亮文字被透镜光学放大至 1.25x (scale: 1.25, y: -2px)
+   *    • 一旦松手释放，所有属性在 LIQUID_SPRING 的同一曲线驱动下毫秒级平滑同步回归常态
+   */
   const isActive = isPressed || isDragging;
 
   const currentActiveIndex = optimisticIndex ?? activeIndex;
 
-  // ---------------------------------------------------------------------------------------
-  // 🎯 DOM 节点与手势物理跟踪引用 (Refs)
-  // ---------------------------------------------------------------------------------------
-  const containerRef = React.useRef<HTMLDivElement>(null); // 最外层 Dock 容器
-  const innerRef = React.useRef<HTMLDivElement>(null);     // 承载水珠与双层文字的绝对参考轨道
-  const pillRef = React.useRef<HTMLDivElement>(null);      // 水珠物理 DOM 实体
-  const isDraggingRef = React.useRef(false);               // 是否正在拖拽中的同步标志
-  const hasMovedRef = React.useRef(false);                 // 是否发生过有效位移（区分点击与拖动）
-  const startXRef = React.useRef(0);                       // 触摸按下时的 clientX 绝对坐标
-  const startMouseXRef = React.useRef(0);                  // 触摸按下时相对容器内的局部 X 坐标
-  const startPillXRef = React.useRef(0);                   // 按下时刻水珠所处的 X 坐标
-  const lastXRef = React.useRef(0);                        // 上一帧的 clientX（用于计算瞬间移动速度）
-  const lastTimeRef = React.useRef(0);                     // 上一帧时间戳（performance.now()）
-  const velocityRef = React.useRef(0);                     // 瞬时滑动速度 (px/ms)，用于松手惯性甩动飞跃
-  const clickTargetIndexRef = React.useRef<number | null>(null); // 按下时命中的 Tab 索引
-  const hasInitializedRef = React.useRef(false);           // 是否已完成首次挂载绝对布局定位
+  /* -------------------------------------------------------------------------
+   * • 05. DOM 引用与手势物理追踪 (DOM Refs & Touch Tracking)
+   * ------------------------------------------------------------------------- */
+  const containerRef = React.useRef<HTMLDivElement>(null);        // 最外层 Dock 容器
+  const innerRef = React.useRef<HTMLDivElement>(null);            // 承载水珠与双层文字的绝对参考轨道
+  const pillRef = React.useRef<HTMLDivElement>(null);             // 水珠物理 DOM 实体
+  const isDraggingRef = React.useRef(false);                      // 是否正在拖拽中的同步标志
+  const hasMovedRef = React.useRef(false);                        // 是否发生过有效位移（区分点击与拖动）
+  const startXRef = React.useRef(0);                              // 触摸按下时的 clientX 绝对坐标
+  const startMouseXRef = React.useRef(0);                         // 触摸按下时相对容器内的局部 X 坐标
+  const startPillXRef = React.useRef(0);                          // 按下时刻水珠所处的 X 坐标
+  const lastXRef = React.useRef(0);                               // 上一帧的 clientX（用于计算瞬间移动速度）
+  const lastTimeRef = React.useRef(0);                            // 上一帧时间戳（performance.now()）
+  const velocityRef = React.useRef(0);                            // 瞬时滑动速度 (px/ms)，用于松手惯性甩动飞跃
+  const clickTargetIndexRef = React.useRef<number | null>(null);  // 按下时命中的 Tab 索引
+  const hasInitializedRef = React.useRef(false);                  // 是否已完成首次挂载绝对布局定位
 
-  // ---------------------------------------------------------------------------------------
-  // 📏 尺寸与样式规格配置 (Sizing Configurations)
-  // ---------------------------------------------------------------------------------------
-  // 核心视觉分工判定：
-  // - 仅底部导航栏 (手机 bottom nav, 即 variant === "dock" 或默认 size === "lg"):
-  //   底栏本身为白底 (bg-white/75)，未激活态水珠采用浅烟熏微灰立体渐变 (from-black/5 to-black/8.5)，清晰辨识！
-  // - 其他常规 Tab (顶部 Header、Dashboard、Shop 页面，size 为 sm 或 md):
-  //   底栏背景自带灰色轨道 (bg-black/[0.04])，未激活态水珠保持原有纯白磨砂质感 (bg-white/80)，黑白对比分明。
+  /* -------------------------------------------------------------------------
+   * • 06. 规格尺寸与视觉变体配置 (Sizing & Variant Presets)
+   * -------------------------------------------------------------------------
+   * 核心视觉分工判定：
+   * • 手机底部导航栏 (Bottom Dock: variant === "dock" 或默认 size === "lg"):
+   *   底栏本身为白底 (bg-white/75)，未激活态水珠采用浅烟熏微灰立体渐变 (from-black/5 to-black/8.5)，清晰辨识！
+   * • 常规 Tab (Header / Dashboard / Shop 页面: size 为 sm 或 md):
+   *   底栏背景自带灰色轨道 (bg-black/[0.04])，未激活态水珠保持原有纯白磨砂质感 (bg-white/80)，黑白对比分明。
+   * • 高度规格 (restingInset: -1.5):
+   *   全规格水珠上下留白缩减 50%（从 5px 缩小至 2.5px），饱满大气，且绝不与底栏外边缘重合。
+   */
   const isDock = variant === "dock" || (variant === undefined && size === "lg");
 
   const config = React.useMemo(() => {
@@ -257,11 +300,14 @@ export function AppleLiquidTabs<T extends string = string>({
     }
   }, [size, isDock]);
 
-  // ---------------------------------------------------------------------------------------
-  // 🎢 物理运动变量 (Motion Values & Springs)
-  // ---------------------------------------------------------------------------------------
-  // rawPillX: 水珠的目标 X 像素坐标（由指针或 snapToIndex 瞬时写入）
-  // springPillX: 经过 LIQUID_SPRING 物理平滑滤波后的实时渲染 X 坐标（驱动水珠与裁剪层）
+  /* -------------------------------------------------------------------------
+   * • 07. 物理运动变量与几何测量 (Motion Values & Metrics)
+   * ------------------------------------------------------------------------- */
+  /**
+   * 水珠 X 轴坐标运动量：
+   * • rawPillX: 瞬时写入的目标 X 像素坐标（由指针或 snapToIndex 立即更新）
+   * • springPillX: 经过 LIQUID_SPRING 物理滤波后的实时渲染坐标（驱动水珠与双层裁剪）
+   */
   const rawPillX = useMotionValue(0);
   const springPillX = useSpring(rawPillX, {
     stiffness: LIQUID_SPRING.stiffness,
@@ -269,17 +315,20 @@ export function AppleLiquidTabs<T extends string = string>({
     mass: LIQUID_SPRING.mass,
   });
 
-  // 水滴有机挤压与拉伸比例 (Squash & Stretch)：
-  // 随移动速度动态改变 scaleX (沿运动方向拉伸) 和 scaleY (垂直压缩)
+  /**
+   * 水滴有机挤压与拉伸比例 (Squash & Stretch)：
+   * 随滑动速度动态调节 scaleX (运动方向拉伸) 和 scaleY (垂直压缩)，
+   * 维持流体视觉体积守恒。
+   */
   const scaleX = useMotionValue(1);
   const scaleY = useMotionValue(1);
 
-  // ---------------------------------------------------------------------------------------
-  // 📐 轨道几何尺寸测量 (getMetrics)
-  // ---------------------------------------------------------------------------------------
-  // 消除父级 CSS transform（如 scale 缩放）、高分屏 Retina DPI 渲染偏差：
-  // 利用 rect.width / innerWidth 计算出真实的缩放比例 scaleFactor，
-  // 保证光标在任何缩放环境下都能 100% 精确居中对齐水珠！
+  /**
+   * 轨道几何尺寸测量 (getMetrics)：
+   * 消除父级 CSS transform（如 scale 缩放）、高分屏 Retina DPI 渲染偏差：
+   * 利用 rect.width / innerWidth 计算出真实的缩放比例 scaleFactor，
+   * 保证光标在任何缩放环境下都能 100% 精确对齐水珠中心。
+   */
   const getMetrics = React.useCallback(() => {
     if (!innerRef.current) {
       return { tabWidth: 0, maxTargetX: 0, scaleFactor: 1, innerLeft: 0, innerWidth: 0 };
@@ -295,12 +344,17 @@ export function AppleLiquidTabs<T extends string = string>({
   const [isMounted, setIsMounted] = React.useState(false);
   const prevActiveIndexRef = React.useRef(currentActiveIndex);
 
-  // =======================================================================================
-  // 🔍【裁剪层 1】clipPathActive: 顶层蓝色文字的显露窗口（正向胶囊裁剪）
-  // =======================================================================================
-  // 作用：只让水珠透镜内部的圆角胶囊区域显露，外部区域 100% 裁剪隐藏。
-  // 几何对齐：边界 top/bottom 严格取 topOffset，与物理水珠 pillRef 及底层打孔完全一致！
-  // 亚像素补偿：左右各施加 0.75px 膨胀缓冲 (Dilation Buffer)，彻底消灭 GPU 抗锯齿接缝漏底。
+  /* -------------------------------------------------------------------------
+   * • 08. 光学互斥遮罩矩阵 (Optical Complementary Masking System)
+   * ------------------------------------------------------------------------- */
+
+  /**
+   * 🔍【裁剪层 1】clipPathActive: 顶层高亮蓝色文字的正向透镜显露窗口
+   * -------------------------------------------------------------------------
+   * • 核心作用：只让水珠透镜内部的圆角胶囊区域显露，外部区域 100% 裁剪隐藏。
+   * • 几何对齐：边界 top/bottom 严格取 topOffset，与物理水珠 pillRef 及底层打孔完全同构。
+   * • 亚像素补偿：左右各施加 0.75px 膨胀缓冲 (Dilation Buffer)，杜绝 GPU 抗锯齿接缝漏底。
+   */
   const clipPathActive = useTransform(
     [springPillX, scaleX],
     ([latestX, latestScaleX]: number[]) => {
@@ -331,18 +385,20 @@ export function AppleLiquidTabs<T extends string = string>({
     }
   );
 
-  // =======================================================================================
-  // 🕳️【裁剪层 2】clipPathInactive: 底层灰色文字的圆角胶囊反向打孔（Capsule Donut Hole）
-  // =======================================================================================
-  // 突破性升级：告别旧版平直矩形直角切刀，改用高密度圆弧采样的「真实圆角胶囊多边形」！
-  // 核心数学算法：
-  // 1. 外圈 5 点顺时针包围整条导航栏 (0% 0% -> 100% 0% -> 100% 100% -> 0% 100% -> 0% 0%)
-  // 2. 内圈利用正弦/余弦三角函数沿半径 r 采样左、右两个半圆弧（各采样 8 个平滑顶点）：
-  //    - 顶部水平切线：(cxLeft, yTop) -> (cxRight, yTop)
-  //    - 右半圆弧：theta 从 -90° 到 +90° 平滑弯曲向下
-  //    - 底部水平切线：(cxRight, yBottom) -> (cxLeft, yBottom)
-  //    - 左半圆弧：theta 从 +90° 到 +270° 平滑弯曲向上回到起点
-  // 3. 几何完全贴合：高度、上下边距、圆角曲率与物理水珠及顶层透镜 100% 同构，彻底消灭直边与圆角脱节漏缝！
+  /**
+   * 🕳️【裁剪层 2】clipPathInactive: 底层灰色文字的圆角胶囊反向打孔 (Capsule Donut Hole)
+   * -------------------------------------------------------------------------
+   * • 数学原理：基于若尔当曲线定理 (Jordan Curve Theorem) 与 CSS polygon(evenodd, ...)。
+   * • 突破升级：告别平直矩形直角切刀，改用高密度圆弧采样的「真实圆角胶囊多边形」！
+   * • 采样算法：
+   *   1. 外圈 5 点顺时针包围整条导航栏 (0% 0% -> 100% 0% -> 100% 100% -> 0% 100% -> 0% 0%)
+   *   2. 内圈利用正弦/余弦三角函数沿半径 r 采样左、右两个半圆弧（各采样 8 个平滑顶点）：
+   *      - 顶部水平切线：(cxLeft, yTop) -> (cxRight, yTop)
+   *      - 右半圆弧：theta 从 -90° 到 +90° 平滑弯曲向下
+   *      - 底部水平切线：(cxRight, yBottom) -> (cxLeft, yBottom)
+   *      - 左半圆弧：theta 从 +90° 到 +270° 平滑弯曲向上回到起点
+   *   3. 几何完全同构：高度、上下边距、圆角曲率与物理水珠及顶层透镜 100% 贴合，彻底消灭直边与圆角脱节漏缝！
+   */
   const clipPathInactive = useTransform(
     [springPillX, scaleX],
     ([latestX, latestScaleX]: number[]) => {
@@ -413,12 +469,15 @@ export function AppleLiquidTabs<T extends string = string>({
     }
   );
 
-  // ---------------------------------------------------------------------------------------
-  // 📍 snapToIndex: 将水珠平滑吸附到指定 Tab 索引位置
-  // ---------------------------------------------------------------------------------------
-  // @param index 目标 Tab 的索引
-  // @param wobble 是否触发有机水滴如果冻般的果冻抖动 (scaleX / scaleY 伸缩波)
-  // ---------------------------------------------------------------------------------------
+  /* -------------------------------------------------------------------------
+   * • 09. 物理吸附与手势交互引擎 (Physics Snapping & Gesture Handlers)
+   * ------------------------------------------------------------------------- */
+
+  /**
+   * 📍 snapToIndex: 将水珠平滑吸附到指定 Tab 索引位置
+   * @param index 目标 Tab 的索引
+   * @param wobble 是否触发有机水滴如果冻般的果冻抖动 (scaleX / scaleY 伸缩波)
+   */
   const snapToIndex = React.useCallback(
     (index: number, wobble = true) => {
       const { tabWidth } = getMetrics();
@@ -427,7 +486,7 @@ export function AppleLiquidTabs<T extends string = string>({
       const targetX = index * tabWidth;
       rawPillX.set(targetX);
 
-      // 果冻果浆弹性回弹动画（模拟水滴撞击边界后的微小惯性振荡）
+      // 果冻弹性回弹动画（模拟水滴撞击边界后的微小惯性振荡）
       if (wobble && pillRef.current) {
         animate(scaleX, [1.05, 0.98, 1], {
           duration: 0.28,
@@ -445,10 +504,10 @@ export function AppleLiquidTabs<T extends string = string>({
     [getMetrics, rawPillX, scaleX, scaleY]
   );
 
-  // ---------------------------------------------------------------------------------------
-  // 🚀 组件挂载初始化：首次加载瞬时归位 (Zero-Jank Mount)
-  // ---------------------------------------------------------------------------------------
-  // 使用 springPillX.jump(initialX) 绕过弹簧初速度计算，防止组件初次渲染时水珠从 0 飞向目标
+  /**
+   * 🚀 组件挂载初始化：首次加载瞬时归位 (Zero-Jank Mount)
+   * 使用 springPillX.jump(initialX) 绕过弹簧初速度计算，防止组件初次渲染时水珠从 0 飞向目标
+   */
   React.useEffect(() => {
     const { tabWidth } = getMetrics();
     if (tabWidth > 0 && !hasInitializedRef.current) {
@@ -486,14 +545,13 @@ export function AppleLiquidTabs<T extends string = string>({
     return () => observer.disconnect();
   }, [currentActiveIndex, getMetrics, rawPillX]);
 
-  // ---------------------------------------------------------------------------------------
-  // 📐 getPillXFromPointer: 根据手势绝对位置计算水珠目标 X 坐标（带 iOS 级别物理双曲正切阻尼）
-  // ---------------------------------------------------------------------------------------
-  // 核心交互法则：
-  // 手指或鼠标点击的位置，必须始终是水珠的【正几何中心】 (pointerX - tabWidth / 2)！
-  // 当拖拽拉出左右边界时，利用 Math.tanh(over / 40) 进行非线性阻尼衰减，拉得越远阻力越大，
-  // 最大溢出距离被平滑钳制在 MAX_OVERDRAG 像素以内。
-  // ---------------------------------------------------------------------------------------
+  /**
+   * 📐 getPillXFromPointer: 根据手势绝对位置计算水珠目标 X 坐标（带 iOS 级别物理双曲正切阻尼）
+   * 核心交互法则：
+   * • 水珠中心始终对齐光标：(pointerX - tabWidth / 2)
+   * • 边界橡皮筋阻尼：当拖拽拉出左右边界时，利用 Math.tanh(over / 40) 进行非线性衰减，
+   *   拉得越远阻力越大，最大溢出距离被平滑钳制在 MAX_OVERDRAG 像素以内。
+   */
   const getPillXFromPointer = React.useCallback(
     (pointerX: number, tabWidth: number, maxTargetX: number) => {
       let targetX = pointerX - tabWidth / 2;
@@ -510,15 +568,14 @@ export function AppleLiquidTabs<T extends string = string>({
     []
   );
 
-  // ---------------------------------------------------------------------------------------
-  // 👆 handlePointerDown: 手指/鼠标按下事件（手势启动）
-  // ---------------------------------------------------------------------------------------
-  // 1. 坐标归一化：通过 getBoundingClientRect() 与 scaleFactor 消除页面缩放/DPI 偏差。
-  // 2. 居中水珠：将水珠中心瞬间瞄准手指落点。
-  // 3. 激活膨胀：立即置 isPressed = true，水珠体积膨胀、顶层高亮文字放大 1.25x。
-  // 4. 水滴拉伸：若落点距离当前水珠较远，触发一次水滴横向拉长、纵向压缩的有机形变。
-  // 5. 原生捕获：调用 setPointerCapture，确保滑出底栏甚至屏幕外时手势依然不丢失。
-  // ---------------------------------------------------------------------------------------
+  /**
+   * 👆 handlePointerDown: 手指/鼠标按下事件（手势启动）
+   * 1. 坐标归一化：通过 getBoundingClientRect() 与 scaleFactor 消除页面缩放/DPI 偏差。
+   * 2. 居中水珠：将水珠中心瞬间瞄准手指落点。
+   * 3. 激活膨胀：立即置 isPressed = true，水珠体积膨胀、顶层高亮文字放大 1.25x。
+   * 4. 水滴拉伸：若落点距离当前水珠较远，触发一次水滴横向拉长、纵向压缩的有机形变。
+   * 5. 原生捕获：调用 setPointerCapture，确保滑出底栏甚至屏幕外时手势依然不丢失。
+   */
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
 
@@ -558,15 +615,14 @@ export function AppleLiquidTabs<T extends string = string>({
     } catch {}
   };
 
-  // ---------------------------------------------------------------------------------------
-  // 🏃 handlePointerMove: 手指/鼠标滑动跟踪（1:1 零延迟直接跟随 + 速度流体形变）
-  // ---------------------------------------------------------------------------------------
-  // 1. 1:1 跟随：水珠物理中心无缝锁死在鼠标/手指横坐标上。
-  // 2. 速度计算：利用 performance.now() 和帧间位移精准求导出瞬时速度 velocity (px/ms)。
-  // 3. 有机流体形变 (Organic Stretch & Squash)：
-  //    滑动越快，水珠在运动方向上被拉长 (scaleX > 1)，在垂直方向上被压扁 (scaleY < 1)，
-  //    完美遵循不可压缩流体的质量守恒定律（物理拟真）。
-  // ---------------------------------------------------------------------------------------
+  /**
+   * 🏃 handlePointerMove: 手指/鼠标滑动跟踪（1:1 零延迟直接跟随 + 速度流体形变）
+   * 1. 1:1 跟随：水珠物理中心无缝锁死在鼠标/手指横坐标上。
+   * 2. 速度计算：利用 performance.now() 和帧间位移精准求导出瞬时速度 velocity (px/ms)。
+   * 3. 有机流体形变 (Organic Stretch & Squash)：
+   *    滑动越快，水珠在运动方向上被拉长 (scaleX > 1)，在垂直方向上被压扁 (scaleY < 1)，
+   *    完美遵循不可压缩流体的质量守恒定律（物理拟真）。
+   */
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
 
@@ -599,15 +655,14 @@ export function AppleLiquidTabs<T extends string = string>({
     scaleY.set(Math.max(0.90, 1 - stretch * 0.45));
   };
 
-  // ---------------------------------------------------------------------------------------
-  // 🚀 handlePointerUp: 手势释放/松手结算（物理惯性甩动飞跃 + 弹性吸附 + 状态提交）
-  // ---------------------------------------------------------------------------------------
-  // 1. 惯性甩动 (Inertia Flick)：根据松手瞬间的瞬时速度 velocity，向前预测落点：
-  //    projectedCenterX = dropletCenterX + velocity * 45
-  //    如果用户做了一个快速“甩动”手势，水珠会顺应动量飞向下一个或下下个 Tab。
-  // 2. 状态退出：置 isPressed/isDragging 为 false，水珠与文字同步弹回标准尺寸。
-  // 3. 释放捕获并执行回调 (onClick, onChange, router.push)。
-  // ---------------------------------------------------------------------------------------
+  /**
+   * 🚀 handlePointerUp: 手势释放/松手结算（物理惯性甩动飞跃 + 弹性吸附 + 状态提交）
+   * 1. 惯性甩动 (Inertia Flick)：根据松手瞬间的瞬时速度 velocity，向前预测落点：
+   *    projectedCenterX = dropletCenterX + velocity * 45
+   *    如果用户做了一个快速“甩动”手势，水珠会顺应动量飞向下一个或下下个 Tab。
+   * 2. 状态退出：置 isPressed/isDragging 为 false，水珠与文字同步弹回标准尺寸。
+   * 3. 释放捕获并执行回调 (onClick, onChange, router.push)。
+   */
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
     const wasDragging = hasMovedRef.current;
@@ -658,9 +713,9 @@ export function AppleLiquidTabs<T extends string = string>({
     }
   };
 
-  // ---------------------------------------------------------------------------------------
-  // 🚫 handlePointerCancel: 手势被系统异常打断（例如系统来电、手势冲突）
-  // ---------------------------------------------------------------------------------------
+  /**
+   * 🚫 handlePointerCancel: 手势被系统异常打断（例如系统来电、手势冲突）
+   */
   const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
@@ -674,9 +729,9 @@ export function AppleLiquidTabs<T extends string = string>({
     snapToIndex(currentActiveIndex, true);
   };
 
-  // ---------------------------------------------------------------------------------------
-  // ⌨️ handleTabClick: 键盘无障碍焦点回车/空格触发处理
-  // ---------------------------------------------------------------------------------------
+  /**
+   * ⌨️ handleTabClick: 键盘无障碍焦点回车/空格触发处理
+   */
   const handleTabClick = (e: React.MouseEvent, index: number, item: AppleLiquidTabItem<T>) => {
     e.preventDefault();
     // detail === 0 代表来自键盘合成的 click 事件，非鼠标指针触发
@@ -702,16 +757,19 @@ export function AppleLiquidTabs<T extends string = string>({
 
   if (items.length === 0) return null;
 
+  /* =========================================================================
+   * 🎨 10. 视觉渲染树架构 (JSX Visual Hierarchy & Render Tree)
+   * ========================================================================= */
   return (
     <>
       {/* =================================================================================
-          🏝️【底栏外壳容器】Segmented Island Runner Dock Container
+          🏝️ 10.1【底栏外壳容器】Segmented Island Runner Dock Container
           ---------------------------------------------------------------------------------
-          - 整体响应手势事件：统一在容器层捕获 PointerDown / Move / Up / Cancel，
+          • 整体响应手势：统一在容器层捕获 PointerDown / Move / Up / Cancel，
             让用户不仅能精准点击单个 Tab，更能在整个底栏上任意盲操滑动拖拽。
-          - 悬浮提升动效 (elevateOnDrag): 当开启且处于拖拽活跃态时，整条底栏轻微浮起 (y: -2px~-3px)
+          • 悬浮提拔动效 (elevateOnDrag): 当开启且处于拖拽活跃态时，整条底栏轻微浮起 (y: -2px~-3px)
             并伴随微妙放大 (scale: 1.02~1.03) 与加深阴影，营造脱离屏幕底部的物理分层感。
-          - 防御手势冲突：应用 touch-none, select-none, -webkit-touch-callout: none，
+          • 防御手势冲突：应用 touch-none, select-none, -webkit-touch-callout: none，
             严密杜绝移动端长按弹出系统操作菜单或与父容器页面滑动手势打架。
           ================================================================================= */}
       <motion.div
@@ -754,14 +812,15 @@ export function AppleLiquidTabs<T extends string = string>({
         {/* 轨道几何容器 (Inner Track Wrapper)：确保水珠物理实体与双层文字严格共享 100% 吻合的内外尺寸参考系 */}
         <div ref={innerRef} className="relative w-full h-full overflow-visible">
           {/* =================================================================================
-              💧【中间层：水珠物理实体】Liquid Water Droplet Active Indicator Pill (Z-15)
+              💧 10.2【中间层：水珠物理实体】Liquid Droplet Active Indicator Pill (Z-15)
               ---------------------------------------------------------------------------------
-              - 定位与层级：z-[15]，衬托在底层常态字与顶层高亮字之间。
-              - 尺寸与形态：
-                • 静止态 (resting): 内缩收纳于轨道内 (top/bottom: restingInset 如 1px)，表现为优雅的毛玻璃胶囊。
-                • 活跃态 (isActive): 向上向下同时暴突溢出 (top/bottom: activeOverhang 如 -7.5px)，
-                  打破底栏边界，呈现真实液体张力突破约束的立体水滴感！
-              - 物理动效：由 springPillX 与 scaleX / scaleY 驱动，产生拖拽速度相关的拉伸与果冻回弹。
+              • 定位与层级：z-[15]，衬托在底层常态字与顶层高亮字之间。
+              • 尺寸与形态：
+                - 静止态 (resting): 内缩收纳于轨道内 (top/bottom: restingInset 约为 -1.5px)，
+                  四周留白均等缩减 50%（约 2.5px），表现为优雅饱满的微灰/白玻璃胶囊。
+                - 活跃态 (isActive): 向上向下同时暴突溢出 (top/bottom: activeOverhang 约为 -7.5px~-9px)，
+                  打破底栏物理边界，呈现液体表面张力突破约束的立体水滴感！
+              • 物理动效：由 springPillX 与 scaleX / scaleY 驱动，产生拖拽速度相关的拉伸与果冻回弹。
               ================================================================================= */}
           <motion.div
             ref={pillRef}
@@ -781,9 +840,12 @@ export function AppleLiquidTabs<T extends string = string>({
               transformOrigin: "center center",
             }}
           >
-            {/* 1. 弯液面光晕圈 (Optical Curved Light Ray Meniscus Rim):
-                利用 CSS Mask Composite: exclude 排除技术，用 1.2px 内边距裁剪出超细高光微边框，
-                静止时微光温润 (opacity 45%)，交互激活时强烈聚焦反光 (opacity 90%)，通过 LIQUID_SPRING 平滑过渡 */}
+            {/* -----------------------------------------------------------------
+                • 10.2.1 弯液面光晕圈 (Curved Light Ray Meniscus Rim)
+                - 利用 CSS Mask Composite: exclude 排除技术裁剪出 1.2px 极细微高光边框
+                - 静止态微光温润 (opacity 45%)，交互活跃态强烈聚焦反光 (opacity 90%)
+                - 严格通过 LIQUID_SPRING 物理弹簧平滑过渡
+                ----------------------------------------------------------------- */}
             <motion.div
               className="absolute -inset-[1px] rounded-full pointer-events-none"
               initial={false}
@@ -802,8 +864,11 @@ export function AppleLiquidTabs<T extends string = string>({
               }}
             />
 
-            {/* 2. 物理色散边缘 (Chromatic Dispersion Prismatic Fringe):
-                模拟不同波长光线折射率差引起的微弱彩虹色散光晕（蓝青色到暖橙色色散），仅在交互活跃态渐变显露 */}
+            {/* -----------------------------------------------------------------
+                • 10.2.2 物理色散边缘 (Chromatic Dispersion Prismatic Fringe)
+                - 模拟不同波长光线折射率差引起的微弱彩虹色散光晕（蓝青色到暖橙色色散）
+                - 仅在触摸按下/拖拽活跃态渐变显露 (opacity: 0 -> 0.75)
+                ----------------------------------------------------------------- */}
             <motion.div
               className="absolute -inset-[0.5px] rounded-full pointer-events-none"
               initial={false}
@@ -822,17 +887,17 @@ export function AppleLiquidTabs<T extends string = string>({
               }}
             />
 
-            {/* 3. 水珠本体容器 (Droplet Body Container):
-                采用双层交叉淡入淡出（Cross-Fade）渐变动效架构，完美避免 CSS 类名切换导致的阴影/滤镜突变，
-                严格共享 LIQUID_SPRING 物理弹簧，带来 100% 丝滑连续的有机液体渐变过渡体验！ */}
+            {/* -----------------------------------------------------------------
+                • 10.2.3 双层交叉渐变水珠本体 (Cross-Fade Dual Droplet Body)
+                - 采用双层交叉淡入淡出（Cross-Fade）渐变动效架构，完美避免 CSS 类名切换导致的突变
+                - 严格共享 LIQUID_SPRING 物理弹簧，带来 100% 丝滑连续的有机液体渐变过渡体验
+                ----------------------------------------------------------------- */}
             <div className="relative w-full h-full rounded-full overflow-hidden">
-              {/* -----------------------------------------------------------------
-                  【静止态水珠外观 (Resting State)】
-                  - Light 模式下呈现微灰烟熏质感渐变 (from-black/[0.05] via-black/[0.065] to-black/[0.085])，
-                    解决纯白底栏上白色水珠不够明显的对比度痛点；Dark 模式维持优雅深邃微光。
-                  - 配合 12px 毛玻璃、内嵌 1px 高光与柔和微阴影，呈现温润的实体玻璃胶囊质感。
-                  - 随 isActive 渐变淡出 (opacity: 0)，松手时渐变淡入 (opacity: 1)。
-                  ----------------------------------------------------------------- */}
+              {/* 【静止态水珠外观 (Resting State)】
+                  - 底部 Nav (variant === "dock"): Light 模式呈现微灰烟熏质感渐变 (from-black/5 to-black/8.5)，
+                    清晰解决白底底栏上水珠不够明显的对比度痛点；Dark 模式维持优雅深邃微光。
+                  - 常规 Tab (variant === "default"): 维持纯白微磨砂 (bg-white/80 dark:bg-white/[0.08])。
+                  - 随 isActive 渐变淡出 (opacity: 0)，松手时渐变淡入 (opacity: 1)。 */}
               <motion.div
                 className={cn(
                   "absolute inset-0 rounded-full overflow-hidden",
@@ -860,13 +925,11 @@ export function AppleLiquidTabs<T extends string = string>({
                 />
               </motion.div>
 
-              {/* -----------------------------------------------------------------
-                  【活跃态水珠外观 (Active State)】
-                  - 真实 iOS 27 高透 3D 凸面水珠本体：保持不变，极高通透度 (bg-white/20)、
+              {/* 【活跃态水珠外观 (Active State)】
+                  - 真实 iOS 27 高透 3D 凸面水珠本体：极高通透度 (bg-white/20)、
                     2px 轻微透镜折射模糊、深邃立体落影与双向高光。
                   - 包含 3D 弧面聚光弧、顶部峰线高光、底部焦散聚集弧与边缘反弹线。
-                  - 随 isActive 渐变淡入 (opacity: 1)，松手时平滑淡出 (opacity: 0)。
-                  ----------------------------------------------------------------- */}
+                  - 随 isActive 渐变淡入 (opacity: 1)，松手时平滑淡出 (opacity: 0)。 */}
               <motion.div
                 className="absolute inset-0 rounded-full overflow-hidden bg-white/[0.20] dark:bg-white/[0.05] backdrop-blur-[2px] border border-black/[0.08] dark:border-white/[0.20] shadow-[0_16px_36px_-4px_rgba(0,0,0,0.18),0_4px_12px_rgba(0,0,0,0.08),inset_0_1.5px_2px_rgba(255,255,255,0.95),inset_0_-1px_1.5px_rgba(255,255,255,0.35)] dark:shadow-[0_22px_48px_-4px_rgba(0,0,0,0.92),0_8px_20px_rgba(0,0,0,0.72),inset_0_1.5px_2px_rgba(255,255,255,0.40),inset_0_-1px_1px_rgba(255,255,255,0.12)]"
                 initial={false}
@@ -891,14 +954,14 @@ export function AppleLiquidTabs<T extends string = string>({
           </motion.div>
 
           {/* =================================================================================
-              📄【Layer 1: 底层灰色常态层】Base Inactive Items Grid (Z-20)
+              📄 10.3【Layer 1: 底层灰色常态层】Base Inactive Items Grid (Z-20)
               ---------------------------------------------------------------------------------
               • 承载内容：整条导航栏所有 Tab 的灰色文字与图标 (标准尺寸 scale 1.0)
               • 裁剪算法：clipPathInactive (利用 CSS polygon(evenodd, ...) 奇偶打孔算法)
               • 核心行为：
                 全底栏正常显示灰色字；唯独在当前水珠所覆盖的坐标窗口内，被若尔当曲线定理
-                打出一个 100% 物理透空的矩形孔洞！
-                水珠下方的灰色字 100% 消失剔除，绝对杜绝双重重影！
+                打出一个 100% 物理透空的圆角胶囊中空切口！
+                水珠下方的灰色字 100% 物理剔除，绝对杜绝双重重影！
               • 事件交互：作为实际接受用户点击/键盘无障碍 Tab 焦点的真实按钮层
               ================================================================================= */}
           <motion.div
@@ -951,7 +1014,7 @@ export function AppleLiquidTabs<T extends string = string>({
           </motion.div>
 
           {/* =================================================================================
-              🔍【Layer 2: 顶层蓝色透镜层】Active Masked Reveal Grid (Z-25)
+              🔍 10.4【Layer 2: 顶层蓝色透镜层】Active Masked Reveal Grid (Z-25)
               ---------------------------------------------------------------------------------
               • 承载内容：整条导航栏所有 Tab 的高亮蓝色文字、发光阴影与图标
               • 裁剪算法：clipPathActive (利用 CSS inset(... round 9999px) 胶囊正向裁剪窗口)
@@ -959,7 +1022,7 @@ export function AppleLiquidTabs<T extends string = string>({
                 整屏默认 100% 裁剪隐藏，只在水珠当前所在的正向圆角窗口内显现出来！
               • 光学透镜放大物理动画：
                 - 静止态 (resting): scale: 1.0, y: 0（未触摸时不突兀变大）
-                - 活跃态 (isActive): scale: 1.25, y: -2px（触摸按下/拖拽时，文字宛如被光学放大镜凸透镜折射放大并浮起）
+                - 活跃态 (isActive): scale: 1.25, y: -2px（触摸按下/拖拽时，文字宛如被凸透镜折射放大并微浮起）
                 - 动效驱动：与水珠位移严格共用 LIQUID_SPRING 物理弹簧，做到同生同灭、毫秒级步调完全一致！
               • 交互穿透：pointer-events-none + aria-hidden="true"，纯粹作为视觉表现层，无障碍焦点由 Layer 1 处理
               ================================================================================= */}
